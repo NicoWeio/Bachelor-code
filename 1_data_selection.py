@@ -22,6 +22,6 @@ new_df = df[feature_list]
 old_size = df_raw.memory_usage(index=True).sum()
 new_size = new_df.memory_usage(index=True).sum()
 
-print(f"Size reduced from {old_size} to {new_size} {(new_size/old_size):%}")
+print(f"Size reduced from {old_size} to {new_size} ({(new_size/old_size):.0%} of original)")
 
-new_df.to_csv('build/data.csv')
+new_df.to_csv('build/data.csv', index=False)
