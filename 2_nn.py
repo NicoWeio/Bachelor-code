@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 # read data
-df = pd.read_csv('build/data.csv', nrows=5000)  # TODO nrows
+df = pd.read_csv('build_large/data.csv', nrows=5000)  # TODO nrows
 
 # discretize the target neutrino energy
 
@@ -72,5 +72,5 @@ plt.grid()
 plt.xlabel('Class')
 plt.ylabel('pdf')
 plt.xticks(np.arange(10))
-plt.savefig('build_local/hist_log.pdf')
+plt.savefig('build/hist_log.pdf')
 # plt.show()

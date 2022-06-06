@@ -23,4 +23,4 @@ new_size = df.memory_usage(index=True).sum()
 
 print(f"Size reduced from {old_size} to {new_size} ({(new_size/old_size):.0%} of original)")
 
-df.to_csv('build/data.csv', index=False)
+df.to_csv('build_large/data.csv', index=False)
