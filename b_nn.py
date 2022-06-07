@@ -23,7 +23,6 @@ print(df)
 
 # log-scaled Binning
 bins = np.logspace(np.log10(lower_limit), np.log10(upper_limit), num_bins+1)
-bins
 
 # new column with discretized energies
 df['E_discr'] = pd.cut(df['MCPrimary.energy'], bins=bins, labels=range(len(bins)-1))
