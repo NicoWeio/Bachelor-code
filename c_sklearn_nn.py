@@ -1,3 +1,5 @@
+# NOTE: This served as a first test. It does not povide reproducible results (for an unknown reason).
+
 from sklearn.neural_network import MLPClassifier
 import matplotlib.pyplot as plt
 import numpy as np
@@ -5,7 +7,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 # read data
-df = pd.read_csv('build_large/data.csv', nrows=5000)  # TODO nrows
+df = pd.read_csv('build_large/data.csv', nrows=50000)  # TODO nrows
 
 # discretize the target neutrino energy
 
@@ -45,7 +47,7 @@ print(f"X_train shape: {X_train.shape}", f"y_train shape: {y_train.shape}",
 ########################################################################################################################
 
 # use a NN from sklearn for now
-classifier = MLPClassifier(hidden_layer_sizes=(100,), max_iter=5000)
+classifier = MLPClassifier(hidden_layer_sizes=(100,), max_iter=5000, random_state=42)
 
 classifier.fit(X_train, y_train)
 
@@ -71,5 +73,5 @@ plt.grid()
 plt.xlabel('Class')
 plt.ylabel('pdf')
 plt.xticks(np.arange(10))
-plt.savefig('build/hist_log.pdf')
+plt.savefig('build/sklearn_nn__hist_log.pdf')
 # plt.show()
