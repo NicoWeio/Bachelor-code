@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-feature_list = Path('1_data_selection_features.csv').read_text().strip().split('\n')
+feature_list = Path('a_data_selection_features.csv').read_text().strip().split('\n')
 
 df = pd.read_csv('/net/big-tank/POOL/users/lkardum/new_mc_binning.csv')
 old_size = df.memory_usage(index=True).sum()
