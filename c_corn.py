@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from pytorch_lightning.loggers import WandbLogger
 import time
 from pytorch_lightning.callbacks import RichProgressBar
@@ -20,18 +21,19 @@ from b_prepare_data import get_data
 # ███ General settings and hyperparameters ███
 BATCH_SIZE = 128
 # NUM_EPOCHS = 200
-NUM_EPOCHS = 20
+NUM_EPOCHS = 5
 LEARNING_RATE = 0.005
 NUM_WORKERS = 0
 # NUM_WORKERS = 40 #TEST
 # NROWS = None
 NROWS = 50000
 DATA_BASEPATH = "./data"
+NUM_BINS = 10
 
 # ███ Load data ███
 X, y = get_data(dummy=False, to_numpy=False, nrows=NROWS)
-y = y.astype(np.int64) # convert category → int64
-data_features, data_labels = X, y # TODO
+y = y.astype(np.int64)  # convert category → int64
+data_features, data_labels = X, y  # TODO
 
 print('Number of features:', data_features.shape[1])
 print('Number of examples:', data_features.shape[0])
@@ -59,7 +61,6 @@ class MyDataset(torch.utils.data.Dataset):
         return self.features.shape[0]
 
 
-
 # ███ DataModule ███
 class DataModule(pl.LightningDataModule):
     def __init__(self, data_path='./'):
@@ -82,7 +83,8 @@ class DataModule(pl.LightningDataModule):
             self.data_labels.values,
             test_size=0.2,
             random_state=1,
-            stratify=self.data_labels.values)
+            # stratify=self.data_labels.values # TODO
+            )
 
         # split into (train, valid)
         X_train, X_valid, y_train, y_valid = train_test_split(
@@ -90,7 +92,8 @@ class DataModule(pl.LightningDataModule):
             y_temp,
             test_size=0.1,
             random_state=1,
-            stratify=y_temp)
+            # stratify=y_temp # TODO
+            )
 
         # Standardize features
         sc = StandardScaler()
@@ -114,6 +117,7 @@ class DataModule(pl.LightningDataModule):
     def test_dataloader(self):
         return DataLoader(self.test, batch_size=BATCH_SIZE,
                           num_workers=NUM_WORKERS)
+
 
 torch.manual_seed(1)
 data_module = DataModule(data_path=DATA_BASEPATH)
@@ -253,3 +257,42 @@ trainer.fit(model=lightning_model, datamodule=data_module)
 
 runtime = (time.time() - start_time)/60
 print(f"Training took {runtime:.2f} min in total.")
+
+
+# ███ Evaluation ███
+# load the best model from the checkpoint
+lightning_model = LightningMLP.load_from_checkpoint(
+    trainer.checkpoint_callback.best_model_path,
+    model=pytorch_model
+)
+lightning_model.eval()
+
+# Evaluate the model on the test set
+all_labels = []
+all_predicted_labels = []
+for batch in data_module.test_dataloader():
+    features, labels = batch
+    all_labels.append(labels)
+    logits = lightning_model(features)
+    predicted_labels = corn_label_from_logits(logits)
+    all_predicted_labels.append(predicted_labels)
+
+all_labels = torch.cat(all_labels)
+all_predicted_labels = torch.cat(all_predicted_labels)
+
+
+plt.figure(figsize=(10, 6))
+
+plt.bar(np.arange(NUM_BINS), np.bincount(all_labels), alpha=0.7, color='red', label='true class')
+plt.bar(np.arange(NUM_BINS), np.bincount(all_predicted_labels, minlength=NUM_BINS), alpha=0.7, color='royalblue', label='predicted class')
+
+plt.legend()
+plt.grid()
+plt.xlabel('Class')
+plt.ylabel('pdf')
+plt.xticks(np.arange(NUM_BINS))
+plt.savefig('build/corn__hist_log.pdf')
+plt.show()
+
+# import code
+# code.interact(local=locals())
