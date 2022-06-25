@@ -286,29 +286,30 @@ def corn_proba_from_logits(logits):
 # Evaluate the model on the test set
 all_labels = []
 all_predicted_labels = []
+all_predicted_probas = []
 for batch in data_module.test_dataloader():
     features, labels = batch
     all_labels.append(labels)
     logits = lightning_model(features)
-    predicted_labels = corn_label_from_logits(logits)
-    all_predicted_labels.append(predicted_labels)
+    # ↓ https://github.com/Raschka-research-group/coral-pytorch/blob/6b85e287118476095bac85d6f3dabc6ffb89a326/coral_pytorch/dataset.py#L123
+    all_predicted_labels.append(corn_label_from_logits(logits))
+    all_predicted_probas.append(corn_proba_from_logits(logits))
 
 all_labels = torch.cat(all_labels)
 all_predicted_labels = torch.cat(all_predicted_labels)
+all_predicted_probas = torch.cat(all_predicted_probas)
 
 
-plt.figure(figsize=(10, 6))
-
-plt.bar(np.arange(NUM_BINS), np.bincount(all_labels), alpha=0.7, color='red', label='true class')
-plt.bar(np.arange(NUM_BINS), np.bincount(all_predicted_labels, minlength=NUM_BINS), alpha=0.7, color='royalblue', label='predicted class')
-
-plt.legend()
-plt.grid()
-plt.xlabel('Class')
-plt.ylabel('pdf')
-plt.xticks(np.arange(NUM_BINS))
-plt.savefig('build/corn__hist_log.pdf')
-plt.show()
+# Export for evaluation
+eval_df = pd.DataFrame({
+    'labels': all_labels,
+    'predicted_labels': all_predicted_labels,
+    'predicted_probas': all_predicted_probas.tolist()
+})
+# print("Saving eval CSV…")
+# eval_df.to_csv('build_large/eval.csv', index=False)
+print("Saving eval HDF5…")
+eval_df.to_hdf('build_large/eval.hdf5', key='eval', index=False)
 
 # import code
 # code.interact(local=locals())
