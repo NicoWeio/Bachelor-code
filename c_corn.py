@@ -1,20 +1,17 @@
-import matplotlib.pyplot as plt
-from pytorch_lightning.loggers import WandbLogger
 import time
-from pytorch_lightning.callbacks import RichProgressBar
-from pytorch_lightning.loggers import CSVLogger
-from pytorch_lightning.callbacks import ModelCheckpoint
-import b_prepare_data
-from torch.utils.data import DataLoader
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
-import os
+
 import numpy as np
-import torch
-from coral_pytorch.losses import corn_loss
-from coral_pytorch.dataset import corn_label_from_logits
+import pandas as pd
 import pytorch_lightning as pl
+import torch
 import torchmetrics
+from coral_pytorch.dataset import corn_label_from_logits
+from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
+from pytorch_lightning.loggers import CSVLogger, WandbLogger
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from torch.utils.data import DataLoader
+
 import wandb
 # ours ↓
 from b_prepare_data import get_data
