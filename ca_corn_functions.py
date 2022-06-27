@@ -1,6 +1,7 @@
 import torch.nn.functional as F
 import torch
 
+
 def corn_label_from_logits(logits):
     # https://github.com/Raschka-research-group/coral-pytorch/blob/6b85e287118476095bac85d6f3dabc6ffb89a326/coral_pytorch/dataset.py#L123
     probas = torch.sigmoid(logits)
@@ -29,7 +30,7 @@ def corn_proba_from_logits(logits):
     return class_probas
 
 
-def corn_loss(logits, y_train, num_classes):
+def corn_loss(logits, y_train, num_classes, weights=None):
     """Computes the CORN loss described in our forthcoming
     'Deep Neural Networks for Rank Consistent Ordinal
     Regression based on Conditional Probabilities'
@@ -42,22 +43,31 @@ def corn_loss(logits, y_train, num_classes):
         Torch tensor containing the class labels.
     num_classes : int
         Number of unique class labels (class labels should start at 0).
+    weights : torch.tensor, shape=(num_examples)
+        [NEW] Weights of the training examples.
     Returns
     ----------
         loss : torch.tensor
         A torch.tensor containing a single loss value.
     """
+    # input checks
+    assert logits.shape[1] == num_classes - 1
+    if weights is not None:
+        assert weights.shape[0] == logits.shape[0]
+
     sets = []
     for i in range(num_classes-1):
         label_mask = y_train > i-1
         label_tensor = (y_train[label_mask] > i).to(torch.int64)
-        sets.append((label_mask, label_tensor))
+        weight_tensor = weights[label_mask] if weights is not None else torch.ones_like(label_tensor)
+        sets.append((label_mask, label_tensor, weight_tensor))
 
     num_examples = 0
     losses = 0.
     for task_index, s in enumerate(sets):
         train_examples = s[0]
         train_labels = s[1]
+        train_weights = s[2]
 
         if len(train_labels) < 1:
             continue
@@ -65,8 +75,12 @@ def corn_loss(logits, y_train, num_classes):
         num_examples += len(train_labels)
         pred = logits[train_examples, task_index]
 
-        loss = -torch.sum(F.logsigmoid(pred)*train_labels
-                          + (F.logsigmoid(pred) - pred)*(1-train_labels))
+        loss = -torch.sum(
+            (F.logsigmoid(pred)*train_labels
+             + (F.logsigmoid(pred) - pred)*(1-train_labels))
+            * train_weights
+        )
+
         losses += loss
 
     return losses/num_classes
