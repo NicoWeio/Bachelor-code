@@ -31,6 +31,7 @@ DATA_BASEPATH = "./data"
 NUM_BINS = 10
 
 # ███ Load data ███
+print("Loading data…")
 X, y = get_data(dummy=False, to_numpy=False, nrows=NROWS)
 y = y.astype(np.int64)  # convert category → int64
 data_features, data_labels = X, y  # TODO
@@ -39,6 +40,7 @@ print('Number of features:', data_features.shape[1])
 print('Number of examples:', data_features.shape[0])
 print('Labels:', np.unique(data_labels.values))
 print('Label distribution:', np.bincount(data_labels))
+
 
 # ███ Performance baseline ███
 avg_prediction = np.median(data_labels.values)  # median minimizes MAE
@@ -84,7 +86,7 @@ class DataModule(pl.LightningDataModule):
             test_size=0.2,
             random_state=1,
             # stratify=self.data_labels.values # TODO
-            )
+        )
 
         # split into (train, valid)
         X_train, X_valid, y_train, y_valid = train_test_split(
@@ -93,7 +95,7 @@ class DataModule(pl.LightningDataModule):
             test_size=0.1,
             random_state=1,
             # stratify=y_temp # TODO
-            )
+        )
 
         # Standardize features
         sc = StandardScaler()
@@ -135,7 +137,7 @@ class MultiLayerPerceptron(torch.nn.Module):
         all_layers = []
         for hidden_unit in hidden_units:
             all_layers.append(torch.nn.Linear(input_size, hidden_unit))
-            all_layers.append(torch.nn.Dropout(0.2)) # NEW
+            all_layers.append(torch.nn.Dropout(0.2))  # NEW
             all_layers.append(torch.nn.ReLU())
             input_size = hidden_unit
 
@@ -244,8 +246,6 @@ wandb_logger = WandbLogger(project="dsea-corn")
 trainer = pl.Trainer(
     max_epochs=NUM_EPOCHS,
     callbacks=callbacks,
-    # progress_bar_refresh_rate=50,  # recommended for notebooks
-    # enable_progress_bar=False,
     accelerator="auto",  # Uses GPUs or TPUs if available
     devices="auto",  # Uses all available GPUs/TPUs if applicable
     logger=[csv_logger, wandb_logger],
