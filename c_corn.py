@@ -188,8 +188,11 @@ class LightningMLP(pl.LightningModule):
         # Use CORN loss --------------------------------------
         # A regular classifier uses:
         # loss = torch.nn.functional.cross_entropy(logits, y)
-        loss = corn_loss(logits, true_labels,
-                         num_classes=self.model.num_classes)
+        loss = corn_loss(
+            logits, true_labels,
+            num_classes=self.model.num_classes,
+            # weights=torch.zeros_like(true_labels), # TODO: Test
+        )
         # ----------------------------------------------------
 
         # CORN logits to labels ------------------------------
