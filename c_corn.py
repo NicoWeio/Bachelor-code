@@ -230,7 +230,7 @@ class LightningMLP(pl.LightningModule):
 # ███ Training ███
 pytorch_model = MultiLayerPerceptron(
     input_size=data_features.shape[1],
-    hidden_units=(40, 20),
+    hidden_units=HIDDEN_UNITS,
     num_classes=np.bincount(data_labels).shape[0])
 
 lightning_model = LightningMLP(
