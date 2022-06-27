@@ -15,20 +15,23 @@ from coral_pytorch.losses import corn_loss
 from coral_pytorch.dataset import corn_label_from_logits
 import pytorch_lightning as pl
 import torchmetrics
+import wandb
 # ours ↓
 from b_prepare_data import get_data
+from x_config import *
 
-# ███ General settings and hyperparameters ███
-BATCH_SIZE = 128
-# NUM_EPOCHS = 200
-NUM_EPOCHS = 5
-LEARNING_RATE = 0.005
-NUM_WORKERS = 0
-# NUM_WORKERS = 40 #TEST
-# NROWS = None
-NROWS = 50000
-DATA_BASEPATH = "./data"
-NUM_BINS = 10
+
+def run_id():
+    return f"{time.strftime('%Y%m%d')}_{NROWS}_{'_'.join(map(str, HIDDEN_UNITS))}"
+
+
+wandb_run = wandb.init(project="dsea-corn")
+wandb.config.batch_size = BATCH_SIZE
+wandb.config.num_epochs = NUM_EPOCHS
+# learning rate is already present for some reason
+wandb.config.num_samples = NROWS
+wandb.config.num_bins = NUM_BINS
+
 
 # ███ Load data ███
 print("Loading data…")
