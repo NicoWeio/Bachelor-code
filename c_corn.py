@@ -18,6 +18,7 @@ import torchmetrics
 import wandb
 # ours ↓
 from b_prepare_data import get_data
+from ca_corn_functions import corn_loss, corn_proba_from_logits
 from x_config import *
 
 
@@ -269,21 +270,6 @@ lightning_model = LightningMLP.load_from_checkpoint(
     model=pytorch_model
 )
 lightning_model.eval()
-
-
-def corn_proba_from_logits(logits):
-    # logits = logits.detach().numpy()
-
-    # shared steps with corn_label_from_logits ↓
-    # https://github.com/Raschka-research-group/coral-pytorch/blob/6b85e287118476095bac85d6f3dabc6ffb89a326/coral_pytorch/dataset.py#L123
-    order_probas = torch.sigmoid(logits)
-    order_probas = torch.cumprod(order_probas, dim=1)
-
-    # calculation of per-class probas ↓
-    class_probas = - torch.diff(order_probas, prepend=torch.ones(order_probas.shape[0], 1))
-    class_probas = torch.cat((class_probas, order_probas[:, -1:]), 1)
-
-    return class_probas
 
 
 # Evaluate the model on the test set

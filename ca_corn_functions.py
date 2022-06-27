@@ -5,19 +5,13 @@ import torch
 def corn_label_from_logits(logits):
     # https://github.com/Raschka-research-group/coral-pytorch/blob/6b85e287118476095bac85d6f3dabc6ffb89a326/coral_pytorch/dataset.py#L123
     probas = torch.sigmoid(logits)
-    # print(probas)
     probas = torch.cumprod(probas, dim=1)
-    # print(probas)
     predict_levels = probas > 0.5
-    # print(predict_levels)
     predicted_labels = torch.sum(predict_levels, dim=1)
-    # print(predicted_labels)
     return predicted_labels
 
 
 def corn_proba_from_logits(logits):
-    # logits = logits.detach().numpy()
-
     # shared steps with corn_label_from_logits ↓
     # https://github.com/Raschka-research-group/coral-pytorch/blob/6b85e287118476095bac85d6f3dabc6ffb89a326/coral_pytorch/dataset.py#L123
     order_probas = torch.sigmoid(logits)
@@ -55,6 +49,7 @@ def corn_loss(logits, y_train, num_classes, weights=None):
     if weights is not None:
         assert weights.shape[0] == logits.shape[0]
 
+    # generate datasets for each task
     sets = []
     for i in range(num_classes-1):
         label_mask = y_train > i-1
@@ -62,6 +57,7 @@ def corn_loss(logits, y_train, num_classes, weights=None):
         weight_tensor = weights[label_mask] if weights is not None else torch.ones_like(label_tensor)
         sets.append((label_mask, label_tensor, weight_tensor))
 
+    # compute loss for each task and sum it up
     num_examples = 0
     losses = 0.
     for task_index, s in enumerate(sets):
