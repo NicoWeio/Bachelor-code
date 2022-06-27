@@ -69,9 +69,8 @@ class MyDataset(torch.utils.data.Dataset):
 
 # ███ DataModule ███
 class DataModule(pl.LightningDataModule):
-    def __init__(self, data_path='./'):
+    def __init__(self):
         super().__init__()
-        self.data_path = data_path
 
     def prepare_data(self):
         pass
@@ -126,7 +125,7 @@ class DataModule(pl.LightningDataModule):
 
 
 torch.manual_seed(1)
-data_module = DataModule(data_path=DATA_BASEPATH)
+data_module = DataModule()
 
 
 # ███ Regular PyTorch Module ███
