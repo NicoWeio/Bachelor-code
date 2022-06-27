@@ -5,6 +5,7 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix
 from x_config import *
 
+print("Loading data…")
 eval_df = pd.read_hdf('build_large/eval.hdf5', key='eval')
 # labels, predicted_labels = eval_df[['labels', 'predicted_labels']]
 labels = eval_df['labels']
@@ -15,32 +16,51 @@ predicted_probas = np.array(eval_df['predicted_probas'].to_list())
 # print(labels[:10])
 # print(labels, predicted_labels)
 
+BINS = np.arange(NUM_BINS)
+
+
 def spectrum_from_labels(labels):
     return np.bincount(labels, minlength=NUM_BINS)
+
 
 def spectrum_from_probas(probas):
     assert probas.shape[1] == NUM_BINS
     return np.sum(probas, axis=0)
 
+
 # Energy distribution
-plt.figure(figsize=(10, 6))
-plt.bar(np.arange(NUM_BINS), spectrum_from_labels(labels), alpha=0.7, color='red', label='true class')
-plt.bar(np.arange(NUM_BINS), spectrum_from_labels(predicted_labels), alpha=0.7, color='royalblue', label='predicted class')
-plt.bar(np.arange(NUM_BINS), spectrum_from_probas(predicted_probas), alpha=0.7, color='green', label='sum_probas')
-plt.xlabel('Class')
-plt.ylabel('pdf')
-plt.xticks(np.arange(NUM_BINS))
-plt.grid()
-plt.legend()
+true_spectrum = spectrum_from_labels(labels)
+pred_spectrum = spectrum_from_probas(predicted_probas)
+pred_spectrum_class = spectrum_from_labels(predicted_labels)
+
+fig, axs = plt.subplots(2, 1, figsize=(10, 6))
+
+# plt.hist(BINS[:-1], BINS, weights=spectrum_from_labels(labels), color='red', label='true class')
+
+axs[0].plot(BINS, true_spectrum, drawstyle='steps-mid', color='red', zorder=10, linewidth=3, label='true class')
+# axs[0].plot(BINS, spectrum_from_labels(predicted_labels), drawstyle='steps-mid', color='royalblue', label='predicted class')
+axs[0].plot(BINS, pred_spectrum, drawstyle='steps-mid', color='green', label='predicted probas')
+axs[0].set_ylabel('count')
+
+axs[1].bar(BINS, (pred_spectrum - true_spectrum) / true_spectrum, label="relative deviation")
+
+for ax in axs:
+    ax.set_xlabel('class')
+    ax.set_xticks(np.arange(NUM_BINS))
+    ax.grid()
+    ax.legend()
+
+plt.tight_layout()
 plt.savefig(f'build/corn__hist_log_{run_id()}.pdf')
 plt.savefig(f'build/corn__hist_log_{run_id()}.png')
 # wandb_run.log({"hist_log": plt})
 # plt.show()
 
+
 # Confusion matrix
 confusion_mtx = confusion_matrix(labels, predicted_labels)
 df_cm = pd.DataFrame(confusion_mtx/confusion_mtx.sum(axis=1)[:, np.newaxis])
-plt.figure(figsize=(12,10))
+plt.figure(figsize=(12, 10))
 ax = sns.heatmap(df_cm, annot=True, cmap='coolwarm')
 bottom, top = ax.get_ylim()
 ax.set_ylim(bottom + 0.5, top - 0.5)
