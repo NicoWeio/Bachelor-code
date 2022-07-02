@@ -1,3 +1,5 @@
+print("Begin imports…")
+
 import time
 
 import numpy as np
@@ -12,41 +14,37 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader
 
-import wandb
+# import wandb
 # ours ↓
-from b_prepare_data import get_data
+import b_prepare_data
 from ca_corn_functions import corn_loss, corn_proba_from_logits
 from x_config import *
 
 
-def run_id():
-    return f"{time.strftime('%Y%m%d')}_{NROWS}_{'_'.join(map(str, HIDDEN_UNITS))}"
-
-
-wandb_run = wandb.init(project="dsea-corn")
-wandb.config.batch_size = BATCH_SIZE
-wandb.config.num_epochs = NUM_EPOCHS
-# learning rate is already present for some reason
-wandb.config.num_samples = NROWS
-wandb.config.num_bins = NUM_BINS
+# wandb_run = wandb.init(project="dsea-corn")
+# wandb.config.batch_size = BATCH_SIZE
+# wandb.config.num_epochs = NUM_EPOCHS
+# # learning rate is already present for some reason
+# wandb.config.num_samples = NROWS
+# wandb.config.num_bins = NUM_BINS
 
 
 # ███ Load data ███
-print("Loading data…")
-X, y = get_data(dummy=False, to_numpy=False, nrows=NROWS)
-y = y.astype(np.int64)  # convert category → int64
-data_features, data_labels = X, y  # TODO
+# print("Loading data…")
+# X, y = get_data(dummy=False, to_numpy=False, nrows=NROWS)
+# y = y.astype(np.int64)  # convert category → int64
+# data_features, data_labels = X, y  # TODO
 
-print('Number of features:', data_features.shape[1])
-print('Number of examples:', data_features.shape[0])
-print('Labels:', np.unique(data_labels.values))
-print('Label distribution:', np.bincount(data_labels))
+# print('Number of features:', data_features.shape[1])
+# print('Number of examples:', data_features.shape[0])
+# print('Labels:', np.unique(data_labels.values))
+# print('Label distribution:', np.bincount(data_labels))
 
 
 # ███ Performance baseline ███
-avg_prediction = np.median(data_labels.values)  # median minimizes MAE
-baseline_mae = np.mean(np.abs(data_labels.values - avg_prediction))
-print(f'Baseline MAE: {baseline_mae:.2f}')
+# avg_prediction = np.median(data_labels.values)  # median minimizes MAE
+# baseline_mae = np.mean(np.abs(data_labels.values - avg_prediction))
+# print(f'Baseline MAE: {baseline_mae:.2f}')
 
 
 # ███ Dataset ███
@@ -64,67 +62,6 @@ class MyDataset(torch.utils.data.Dataset):
         return self.features.shape[0]
 
 
-# ███ DataModule ███
-class DataModule(pl.LightningDataModule):
-    def __init__(self):
-        super().__init__()
-
-    def prepare_data(self):
-        pass
-
-    def setup(self, stage=None):
-        self.data_features = data_features
-        self.data_labels = data_labels
-
-        # Split into
-        # 70% train, 10% validation, 20% testing
-
-        # split into ((train, valid), test)
-        X_temp, X_test, y_temp, y_test = train_test_split(
-            self.data_features.values,
-            self.data_labels.values,
-            test_size=0.2,
-            random_state=1,
-            # stratify=self.data_labels.values # TODO
-        )
-
-        # split into (train, valid)
-        X_train, X_valid, y_train, y_valid = train_test_split(
-            X_temp,
-            y_temp,
-            test_size=0.1,
-            random_state=1,
-            # stratify=y_temp # TODO
-        )
-
-        # Standardize features
-        sc = StandardScaler()
-        X_train_std = sc.fit_transform(X_train)
-        X_valid_std = sc.transform(X_valid)
-        X_test_std = sc.transform(X_test)
-
-        self.train = MyDataset(X_train_std, y_train)
-        self.valid = MyDataset(X_valid_std, y_valid)
-        self.test = MyDataset(X_test_std, y_test)
-
-    def train_dataloader(self):
-        return DataLoader(self.train, batch_size=BATCH_SIZE,
-                          num_workers=NUM_WORKERS,
-                          drop_last=True)
-
-    def val_dataloader(self):
-        return DataLoader(self.valid, batch_size=BATCH_SIZE,
-                          num_workers=NUM_WORKERS)
-
-    def test_dataloader(self):
-        return DataLoader(self.test, batch_size=BATCH_SIZE,
-                          num_workers=NUM_WORKERS)
-
-
-torch.manual_seed(1)
-data_module = DataModule()
-
-
 # ███ Regular PyTorch Module ███
 class MultiLayerPerceptron(torch.nn.Module):
     def __init__(self, input_size, hidden_units, num_classes):
@@ -137,7 +74,7 @@ class MultiLayerPerceptron(torch.nn.Module):
         all_layers = []
         for hidden_unit in hidden_units:
             all_layers.append(torch.nn.Linear(input_size, hidden_unit))
-            all_layers.append(torch.nn.Dropout(0.2))  # NEW
+            all_layers.append(torch.nn.Dropout(0.2))  # NEW // possible cause for stupid loss
             all_layers.append(torch.nn.ReLU())
             input_size = hidden_unit
 
@@ -226,78 +163,96 @@ class LightningMLP(pl.LightningModule):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
 
+def fit(X, y):
+    """Receives training data only. The wrapper / DSEA should handle all the rest."""
+    # y = y.astype(np.int64)  # convert category → int64
 
-# ███ Training ███
-pytorch_model = MultiLayerPerceptron(
-    input_size=data_features.shape[1],
-    hidden_units=HIDDEN_UNITS,
-    num_classes=np.bincount(data_labels).shape[0])
+    class DataModule(pl.LightningDataModule):
+        def __init__(self):
+            super().__init__()
 
-lightning_model = LightningMLP(
-    model=pytorch_model,
-    learning_rate=LEARNING_RATE)
+        def prepare_data(self):
+            pass
 
+        def setup(self, stage=None):
+            # print("Loading data…")
+            # X, y = b_prepare_data.get_data(dummy=False, to_numpy=False, nrows=NROWS)
+            # y = y.astype(np.int64)  # convert category → int64
 
-callbacks = [
-    RichProgressBar(refresh_rate_per_second=1),
-    ModelCheckpoint(save_top_k=1, mode="min", monitor="valid_mae"),  # save top 1 model
-]
-csv_logger = CSVLogger(save_dir="logs/", name="mlp-corn-cement")
-wandb_logger = WandbLogger(project="dsea-corn")
+            self.data_features = X
+            self.data_labels = y
 
+            X_train = X
+            y_train = y
 
-trainer = pl.Trainer(
-    max_epochs=NUM_EPOCHS,
-    callbacks=callbacks,
-    accelerator="auto",  # Uses GPUs or TPUs if available
-    devices="auto",  # Uses all available GPUs/TPUs if applicable
-    logger=[csv_logger, wandb_logger],
-    deterministic=True,
-    log_every_n_steps=10)
+            # Standardize features
+            # TODO: move to a preprocessing module
+            sc = StandardScaler()
+            X_train_std = sc.fit_transform(X_train)
 
-start_time = time.time()
-trainer.fit(model=lightning_model, datamodule=data_module)
+            self.train = MyDataset(X_train_std, y_train)
 
-runtime = (time.time() - start_time)/60
-print(f"Training took {runtime:.2f} min in total.")
-
-
-# ███ Evaluation ███
-# load the best model from the checkpoint
-lightning_model = LightningMLP.load_from_checkpoint(
-    trainer.checkpoint_callback.best_model_path,
-    model=pytorch_model
-)
-lightning_model.eval()
+        def train_dataloader(self):
+            return DataLoader(self.train, batch_size=BATCH_SIZE,
+                            num_workers=NUM_WORKERS,
+                            drop_last=True)
 
 
-# Evaluate the model on the test set
-all_labels = []
-all_predicted_labels = []
-all_predicted_probas = []
-for batch in data_module.test_dataloader():
-    features, labels = batch
-    all_labels.append(labels)
-    logits = lightning_model(features)
-    # ↓ https://github.com/Raschka-research-group/coral-pytorch/blob/6b85e287118476095bac85d6f3dabc6ffb89a326/coral_pytorch/dataset.py#L123
-    all_predicted_labels.append(corn_label_from_logits(logits))
-    all_predicted_probas.append(corn_proba_from_logits(logits))
+    torch.manual_seed(1)
+    data_module = DataModule()
+    data_module.setup()
 
-all_labels = torch.cat(all_labels)
-all_predicted_labels = torch.cat(all_predicted_labels)
-all_predicted_probas = torch.cat(all_predicted_probas)
+    # data_features = data_module.data_features
+    # data_labels = data_module.data_labels
+
+    # ███ Training ███
+    pytorch_model = MultiLayerPerceptron(
+        input_size=data_module.data_features.shape[1],
+        hidden_units=HIDDEN_UNITS,
+        num_classes=np.bincount(data_module.data_labels).shape[0],
+    )
+
+    lightning_model = LightningMLP(
+        model=pytorch_model,
+        learning_rate=LEARNING_RATE,
+    )
 
 
-# Export for evaluation
-eval_df = pd.DataFrame({
-    'labels': all_labels,
-    'predicted_labels': all_predicted_labels,
-    'predicted_probas': all_predicted_probas.tolist()
-})
-# print("Saving eval CSV…")
-# eval_df.to_csv('build_large/eval.csv', index=False)
-print("Saving eval HDF5…")
-eval_df.to_hdf('build_large/eval.hdf5', key='eval', index=False)
+    callbacks = [
+        RichProgressBar(refresh_rate_per_second=1),
+        ModelCheckpoint(save_top_k=1, mode="min", monitor="valid_mae"),  # save top 1 model
+    ]
+    csv_logger = CSVLogger(save_dir="logs/", name="mlp-corn-cement")
+    # wandb_logger = WandbLogger(project="dsea-corn")
 
-# import code
-# code.interact(local=locals())
+
+    trainer = pl.Trainer(
+        max_epochs=NUM_EPOCHS,
+        callbacks=callbacks,
+        # accelerator="auto",  # Uses GPUs or TPUs if available
+        # devices="auto",  # Uses all available GPUs/TPUs if applicable
+        accelerator='cpu', # TODO: Test
+        # devices='cpu',
+        logger=[
+            csv_logger,
+            # wandb_logger
+            ],
+        deterministic=True,
+        log_every_n_steps=10,
+        )
+
+    start_time = time.time()
+    # trainer.fit(model=lightning_model, datamodule=data_module)
+    trainer.fit(
+        model=lightning_model,
+        datamodule=data_module,
+    )
+
+    runtime = (time.time() - start_time)/60
+    print(f"Training took {runtime:.2f} min in total.")
+
+
+    # TODO: remember the best model and…
+
+if __name__ == "__main__":
+    print("Not anymore.")
