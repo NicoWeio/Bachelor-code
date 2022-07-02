@@ -69,8 +69,8 @@ SINGLE_EVENTS_GRIDSIZE = (4, 4)
 SINGLE_EVENTS_NUM = SINGLE_EVENTS_GRIDSIZE[0] * SINGLE_EVENTS_GRIDSIZE[1]
 
 # → one sample for each class
-events_per_class = SINGLE_EVENTS_NUM // NUM_BINS # not rounding up so some subplots will be empty
-# events_per_class = SINGLE_EVENTS_NUM // NUM_BINS + 1 # rounding up so the plot is filled
+events_per_class = SINGLE_EVENTS_NUM // NUM_BINS  # not rounding up so some subplots will be empty
+# events_per_class = SINGLE_EVENTS_NUM // NUM_BINS + 1  # rounding up so all subplots are filled
 sample_indices = []
 for i in range(NUM_BINS):
     possible_indices = np.where(labels == i)[0]
@@ -91,9 +91,9 @@ for i, ax in enumerate(axs.flat):
 
     sample_i = sample_indices[i]
     ax.axvline(labels[sample_i], color='red', linestyle='--', label='true class')
-    ax.plot(BINS, predicted_probas[sample_i], drawstyle='steps-mid', color='green', label='predicted class')
+    ax.plot(BINS, predicted_probas[sample_i], drawstyle='steps-mid', color='green', label='predicted probas')
     ax.set_xlabel('class')
-    ax.set_ylabel('count')
+    ax.set_ylabel('probability')
     ax.set_yscale('log')
     ax.grid()
     ax.legend()
