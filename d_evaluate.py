@@ -102,6 +102,30 @@ plt.savefig(f'build/corn__single_events_{run_id()}.pdf')
 plt.savefig(f'build/corn__single_events_{run_id()}.png')
 
 
+# █ Per-bin spectra
+GRIDSIZE = (3, 4)
+fig, axs = plt.subplots(
+    *GRIDSIZE,
+    figsize=(GRIDSIZE[1] * 5, GRIDSIZE[0] * 5)
+)
+# TODO: iterate over bins instead of axes for clarity
+for i, ax in enumerate(axs.flat):
+    if i >= NUM_BINS:
+        ax.axis('off')
+        continue
+
+    ax.axvline(i, color='red', linestyle='--', label='true class')
+    ax.plot(BINS, spectrum_from_probas(predicted_probas[labels == i]), drawstyle='steps-mid', color='green', label='predicted probas (→ spectrum)')
+    ax.set_xlabel('class')
+    ax.set_ylabel('count')
+    ax.set_yscale('log')
+    ax.grid()
+    ax.legend()
+plt.tight_layout()
+plt.savefig(f'build/corn__per_bin_spectra_{run_id()}.pdf')
+plt.savefig(f'build/corn__per_bin_spectra_{run_id()}.png')
+
+
 # █ Confusion matrix
 # TODO: Use predicted_probas instead of predicted_labels
 confusion_mtx = confusion_matrix(labels, predicted_labels)
