@@ -19,13 +19,19 @@ predicted_probas = np.array(eval_df['predicted_probas'].to_list())
 BINS = np.arange(NUM_BINS)
 
 
-def spectrum_from_labels(labels):
-    return np.bincount(labels, minlength=NUM_BINS)
+def spectrum_from_labels(labels, norm=True):
+    spectrum = np.bincount(labels, minlength=NUM_BINS).astype(float)
+    if norm:
+        spectrum /= len(labels)
+    return spectrum
 
 
-def spectrum_from_probas(probas):
+def spectrum_from_probas(probas, norm=True):
     assert probas.shape[1] == NUM_BINS
-    return np.sum(probas, axis=0)
+    spectrum = np.sum(probas, axis=0)
+    if norm:
+        spectrum /= len(probas)
+    return spectrum
 
 
 # █ Energy distribution
