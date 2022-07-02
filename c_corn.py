@@ -1,24 +1,23 @@
+from x_config import *
+from ca_corn_functions import corn_loss, corn_proba_from_logits
+import b_prepare_data
+from torch.utils.data import DataLoader
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from pytorch_lightning.loggers import CSVLogger, WandbLogger
+from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
+from coral_pytorch.dataset import corn_label_from_logits
+import torchmetrics
+import torch
+import pytorch_lightning as pl
+import pandas as pd
+import numpy as np
+import time
 print("Begin imports…")
 
-import time
-
-import numpy as np
-import pandas as pd
-import pytorch_lightning as pl
-import torch
-import torchmetrics
-from coral_pytorch.dataset import corn_label_from_logits
-from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
-from pytorch_lightning.loggers import CSVLogger, WandbLogger
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from torch.utils.data import DataLoader
 
 # import wandb
 # ours ↓
-import b_prepare_data
-from ca_corn_functions import corn_loss, corn_proba_from_logits
-from x_config import *
 
 
 # wandb_run = wandb.init(project="dsea-corn")
@@ -163,96 +162,95 @@ class LightningMLP(pl.LightningModule):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
 
-def fit(X, y):
-    """Receives training data only. The wrapper / DSEA should handle all the rest."""
-    # y = y.astype(np.int64)  # convert category → int64
 
-    class DataModule(pl.LightningDataModule):
-        def __init__(self):
-            super().__init__()
+class CornClassifier():
+    def __init__(self):
+        pass  # TODO
 
-        def prepare_data(self):
-            pass
+    def fit(self, X, y, sample_weight=None):
+        """Receives training data only. The wrapper / DSEA should handle all the rest."""
+        # TODO: pass sample_weight to the model
 
-        def setup(self, stage=None):
-            self.data_features = X
-            self.data_labels = y
+        class DataModule(pl.LightningDataModule):
+            def __init__(self):
+                super().__init__()
 
-            X_train = X
-            y_train = y
+            def prepare_data(self):
+                pass
 
-            # Standardize features
-            # TODO: move to a preprocessing module
-            sc = StandardScaler()
-            X_train_std = sc.fit_transform(X_train)
+            def setup(self, stage=None):
+                self.data_features = X
+                self.data_labels = y
 
-            self.train = MyDataset(X_train_std, y_train)
+                X_train = X
+                y_train = y
 
-        def train_dataloader(self):
-            return DataLoader(
-                self.train, batch_size=BATCH_SIZE,
-                            num_workers=NUM_WORKERS,
-                            drop_last=True,
-                            )
+                # Standardize features
+                # TODO: move to a preprocessing module
+                sc = StandardScaler()
+                X_train_std = sc.fit_transform(X_train)
 
+                self.train = MyDataset(X_train_std, y_train)
 
-    torch.manual_seed(1)
-    data_module = DataModule()
-    # data_module.setup()
+            def train_dataloader(self):
+                return DataLoader(
+                    self.train, batch_size=BATCH_SIZE,
+                    num_workers=NUM_WORKERS,
+                    drop_last=True,
+                )
 
-    # data_features = data_module.data_features
-    # data_labels = data_module.data_labels
+        torch.manual_seed(1)
+        data_module = DataModule()
+        # data_module.setup()
 
-    # ███ Training ███
-    pytorch_model = MultiLayerPerceptron(
-        # input_size=data_module.data_features.shape[1],
-        # num_classes=np.bincount(data_module.data_labels).shape[0],
-        input_size = X.shape[1],
-        num_classes = np.bincount(y).shape[0],
-        hidden_units=HIDDEN_UNITS,
-    )
-
-    lightning_model = LightningMLP(
-        model=pytorch_model,
-        learning_rate=LEARNING_RATE,
-    )
-
-
-    callbacks = [
-        RichProgressBar(refresh_rate_per_second=1),
-        ModelCheckpoint(save_top_k=1, mode="min", monitor="valid_mae"),  # save top 1 model
-    ]
-    csv_logger = CSVLogger(save_dir="logs/", name="mlp-corn-cement")
-    # wandb_logger = WandbLogger(project="dsea-corn")
-
-
-    trainer = pl.Trainer(
-        max_epochs=NUM_EPOCHS,
-        callbacks=callbacks,
-        accelerator='auto',  # Uses GPUs or TPUs if available
-        # devices='auto',  # Uses all available GPUs/TPUs if applicable
-        devices=1,
-        # accelerator='cpu', # TODO: Test
-        logger=[
-            csv_logger,
-            # wandb_logger
-            ],
-        deterministic=True,
-        log_every_n_steps=10,
+        # ███ Training ███
+        pytorch_model = MultiLayerPerceptron(
+            # input_size=data_module.data_features.shape[1],
+            # num_classes=np.bincount(data_module.data_labels).shape[0],
+            input_size=X.shape[1],
+            num_classes=np.bincount(y).shape[0],
+            hidden_units=HIDDEN_UNITS,
         )
 
-    start_time = time.time()
-    # trainer.fit(model=lightning_model, datamodule=data_module)
-    trainer.fit(
-        model=lightning_model,
-        datamodule=data_module,
-    )
+        lightning_model = LightningMLP(
+            model=pytorch_model,
+            learning_rate=LEARNING_RATE,
+        )
 
-    runtime = (time.time() - start_time)/60
-    print(f"Training took {runtime:.2f} min in total.")
+        callbacks = [
+            RichProgressBar(refresh_rate_per_second=1),
+            ModelCheckpoint(save_top_k=1, mode="min", monitor="valid_mae"),  # save top 1 model
+        ]
+        csv_logger = CSVLogger(save_dir="logs/", name="mlp-corn-cement")
+        # wandb_logger = WandbLogger(project="dsea-corn")
 
+        trainer = pl.Trainer(
+            max_epochs=NUM_EPOCHS,
+            callbacks=callbacks,
+            accelerator='auto',  # Uses GPUs or TPUs if available
+            # devices='auto',  # Uses all available GPUs/TPUs if applicable
+            devices=1, # use only one GPU: this preserves my sanity
+            # accelerator='cpu', # TODO: Test
+            logger=[
+                csv_logger,
+                # wandb_logger
+            ],
+            deterministic=True,
+            log_every_n_steps=10,
+        )
 
-    # TODO: remember the best model and…
+        start_time = time.time()
+        # trainer.fit(model=lightning_model, datamodule=data_module)
+        trainer.fit(
+            model=lightning_model,
+            datamodule=data_module,
+        )
+
+        runtime = (time.time() - start_time)/60
+        print(f"Training took {runtime:.2f} min in total.")
+
+        # TODO: remember the best model and…
+
 
 if __name__ == "__main__":
     print("Not anymore.")

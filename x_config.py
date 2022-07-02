@@ -1,7 +1,8 @@
 import time
 
 # ███ General settings and hyperparameters ███
-BATCH_SIZE = 2**6
+# BATCH_SIZE = 2**6
+BATCH_SIZE = 2**15 # Test, lol
 # NUM_EPOCHS = 200
 NUM_EPOCHS = 5
 LEARNING_RATE = 0.005

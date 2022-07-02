@@ -7,10 +7,11 @@ from x_config import *
 
 print("Loading data…")
 X, y = b_prepare_data.get_data(dummy=False,
-                               # to_numpy=False,
-                               to_numpy=True,  # CHANGED!
+                               to_numpy=True,
                                nrows=NROWS,
                                )
 # y = y.astype(np.int64)  # convert category → int64
 
-c_corn.fit(X, y)
+classifier = c_corn.CornClassifier()
+
+classifier.fit(X, y)
