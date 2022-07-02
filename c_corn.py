@@ -175,10 +175,6 @@ def fit(X, y):
             pass
 
         def setup(self, stage=None):
-            # print("Loading data…")
-            # X, y = b_prepare_data.get_data(dummy=False, to_numpy=False, nrows=NROWS)
-            # y = y.astype(np.int64)  # convert category → int64
-
             self.data_features = X
             self.data_labels = y
 
@@ -193,23 +189,27 @@ def fit(X, y):
             self.train = MyDataset(X_train_std, y_train)
 
         def train_dataloader(self):
-            return DataLoader(self.train, batch_size=BATCH_SIZE,
+            return DataLoader(
+                self.train, batch_size=BATCH_SIZE,
                             num_workers=NUM_WORKERS,
-                            drop_last=True)
+                            drop_last=True,
+                            )
 
 
     torch.manual_seed(1)
     data_module = DataModule()
-    data_module.setup()
+    # data_module.setup()
 
     # data_features = data_module.data_features
     # data_labels = data_module.data_labels
 
     # ███ Training ███
     pytorch_model = MultiLayerPerceptron(
-        input_size=data_module.data_features.shape[1],
+        # input_size=data_module.data_features.shape[1],
+        # num_classes=np.bincount(data_module.data_labels).shape[0],
+        input_size = X.shape[1],
+        num_classes = np.bincount(y).shape[0],
         hidden_units=HIDDEN_UNITS,
-        num_classes=np.bincount(data_module.data_labels).shape[0],
     )
 
     lightning_model = LightningMLP(
@@ -229,10 +229,10 @@ def fit(X, y):
     trainer = pl.Trainer(
         max_epochs=NUM_EPOCHS,
         callbacks=callbacks,
-        # accelerator="auto",  # Uses GPUs or TPUs if available
-        # devices="auto",  # Uses all available GPUs/TPUs if applicable
-        accelerator='cpu', # TODO: Test
-        # devices='cpu',
+        accelerator='auto',  # Uses GPUs or TPUs if available
+        # devices='auto',  # Uses all available GPUs/TPUs if applicable
+        devices=1,
+        # accelerator='cpu', # TODO: Test
         logger=[
             csv_logger,
             # wandb_logger
