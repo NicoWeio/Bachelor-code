@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 # read data
-df = pd.read_csv('build_large/data.csv', nrows=50000)  # TODO nrows
+df = pd.read_csv('build_large/data.csv', nrows=1000)  # TODO nrows
 
 # discretize the target neutrino energy
 
@@ -35,7 +35,8 @@ print(df['E_discr'].value_counts())
 df_E_dummy = pd.get_dummies(df['E_discr'])
 
 X = df.drop(columns=['MCPrimary.energy', 'E_discr']).to_numpy()
-y = df_E_dummy.to_numpy()
+# y = df_E_dummy.to_numpy()
+y = df['E_discr'].astype(int).to_numpy()
 
 X_train, X_eval, y_train, y_eval = train_test_split(
     X, y,
@@ -47,7 +48,10 @@ print(f"X_train shape: {X_train.shape}", f"y_train shape: {y_train.shape}",
 ########################################################################################################################
 
 # use a NN from sklearn for now
-classifier = MLPClassifier(hidden_layer_sizes=(100,), max_iter=5000, random_state=42)
+# classifier = MLPClassifier(hidden_layer_sizes=(100,), max_iter=5000, random_state=42)
+
+from mord import LogisticAT
+classifier = LogisticAT()
 
 classifier.fit(X_train, y_train)
 
@@ -58,6 +62,7 @@ print(f"Evaluation set score: {classifier.score(X_eval, y_eval)}")
 
 # propability for each class
 y_eval_pred = classifier.predict(X_eval)
+classifier.predict_proba(X_eval)
 
 # choose class with max value
 y_pred_max = np.zeros_like(y_eval_pred)
