@@ -1,10 +1,10 @@
 # Draft for externalizing data preparation.
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
-def get_data(dummy=True, to_numpy=True, nrows=None):
+def get_data(dummy=True, nrows=None):
     """Returns (X, y) ready for training."""
     df = pd.read_csv('build_large/data.csv', nrows=nrows)
 
@@ -29,6 +29,10 @@ def get_data(dummy=True, to_numpy=True, nrows=None):
 
     X = df.drop(columns=['MCPrimary.energy', 'E_discr'])
 
+    # Standardize features
+    # NOTE: Implicit conversion of X to a NumPy array
+    X = StandardScaler().fit_transform(X)
+
     if dummy:
         # Convert categorical variable into dummy/indicator variables
         df_E_dummy = pd.get_dummies(df['E_discr'])
@@ -36,8 +40,4 @@ def get_data(dummy=True, to_numpy=True, nrows=None):
     else:
         y = df['E_discr']
 
-
-    if to_numpy:
-        return X.to_numpy(), y.to_numpy()
-    else:
-        return X, y
+    return X, y.to_numpy()

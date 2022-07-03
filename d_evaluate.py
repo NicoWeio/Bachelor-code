@@ -9,7 +9,7 @@ print("Loading data…")
 eval_df = pd.read_hdf('build_large/eval.hdf5', key='eval')
 # labels, predicted_labels = eval_df[['labels', 'predicted_labels']]
 labels = eval_df['labels']
-predicted_labels = eval_df['predicted_labels']
+# predicted_labels = eval_df['predicted_labels']
 predicted_probas = np.array(eval_df['predicted_probas'].to_list())
 
 # print(eval_df)
@@ -34,10 +34,15 @@ def spectrum_from_probas(probas, norm=True):
     return spectrum
 
 
+# █ Verification
+# → Every bin is represented in the (true) `labels`
+assert np.all(np.isin(BINS, labels)), "Not all bins are represented in the labels!"
+
+
 # █ Energy distribution
 true_spectrum = spectrum_from_labels(labels)
 pred_spectrum = spectrum_from_probas(predicted_probas)
-pred_spectrum_class = spectrum_from_labels(predicted_labels)
+# pred_spectrum_class = spectrum_from_labels(predicted_labels)
 
 fig, axs = plt.subplots(2, 1, figsize=(10, 6))
 
@@ -115,7 +120,8 @@ for i, ax in enumerate(axs.flat):
         continue
 
     ax.axvline(i, color='red', linestyle='--', label='true class')
-    ax.plot(BINS, spectrum_from_probas(predicted_probas[labels == i]), drawstyle='steps-mid', color='green', label='predicted probas (→ spectrum)')
+    ax.plot(BINS, spectrum_from_probas(predicted_probas[labels == i]),
+            drawstyle='steps-mid', color='green', label='predicted probas (→ spectrum)')
     ax.set_xlabel('class')
     ax.set_ylabel('count')
     ax.set_yscale('log')
@@ -128,15 +134,15 @@ plt.savefig(f'build/corn__per_bin_spectra_{run_id()}.png')
 
 # █ Confusion matrix
 # TODO: Use predicted_probas instead of predicted_labels
-confusion_mtx = confusion_matrix(labels, predicted_labels)
-df_cm = pd.DataFrame(confusion_mtx/confusion_mtx.sum(axis=1)[:, np.newaxis])
-plt.figure(figsize=(12, 10))
-ax = sns.heatmap(df_cm, annot=True, cmap='coolwarm')
-bottom, top = ax.get_ylim()
-ax.set_ylim(bottom + 0.5, top - 0.5)
-plt.xlabel('Predicted label')
-plt.ylabel('True label')
-plt.title('Confusion Matrix (normalized)')
-plt.savefig(f'build/corn__confusion_{run_id()}.pdf')
-plt.savefig(f'build/corn__confusion_{run_id()}.png')
+# confusion_mtx = confusion_matrix(labels, predicted_labels)
+# df_cm = pd.DataFrame(confusion_mtx/confusion_mtx.sum(axis=1)[:, np.newaxis])
+# plt.figure(figsize=(12, 10))
+# ax = sns.heatmap(df_cm, annot=True, cmap='coolwarm')
+# bottom, top = ax.get_ylim()
+# ax.set_ylim(bottom + 0.5, top - 0.5)
+# plt.xlabel('Predicted label')
+# plt.ylabel('True label')
+# plt.title('Confusion Matrix (normalized)')
+# plt.savefig(f'build/corn__confusion_{run_id()}.pdf')
+# plt.savefig(f'build/corn__confusion_{run_id()}.png')
 # wandb_run.log({"confusion": plt})

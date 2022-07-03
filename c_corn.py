@@ -233,12 +233,7 @@ class CornClassifier():
                 X_train = X
                 y_train = y
 
-                # Standardize features
-                # TODO: move to a preprocessing module
-                sc = StandardScaler()
-                X_train_std = sc.fit_transform(X_train)
-
-                self.train = MyDataset(X_train_std, y_train)
+                self.train = MyDataset(X_train, y_train)
 
             def train_dataloader(self):
                 return DataLoader(
@@ -272,7 +267,7 @@ class CornClassifier():
         X_dataloader = DataLoader(
             X_dataset, batch_size=BATCH_SIZE,
             num_workers=NUM_WORKERS,
-            drop_last=True,
+            drop_last=False, # This is important for evaluation
         )
 
         # wrong; yields predicted_labels, obviously, which isn't our class_probas
