@@ -4,7 +4,8 @@ import time
 BATCH_SIZE = 2**6
 # BATCH_SIZE = 2**15 # Test, lol
 # NUM_EPOCHS = 200
-NUM_EPOCHS = 2
+NUM_EPOCHS = 3
+NUM_DSEA_ITERATIONS = 3
 LEARNING_RATE = 0.005
 NUM_WORKERS = 48 # no speedup compared to 0
 # NROWS = None # = all rows

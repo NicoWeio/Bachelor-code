@@ -11,7 +11,7 @@ from x_config import *
 
 print("Loading data…")
 X, y = b_prepare_data.get_data(dummy=False,
-                            #    to_numpy=True,
+                               #    to_numpy=True,
                                nrows=NROWS,
                                )
 # y = y.astype(np.int64)  # convert category → int64
@@ -25,7 +25,13 @@ classifier = c_corn.CornClassifier(
 
 # classifier.fit(X, y)
 
-f_est, probas = dsea(X_test, X_train, y_train, classifier, return_contributions=True)
+f_est, probas = dsea(X_test,
+                     X_train,
+                     y_train,
+                     classifier,
+                     return_contributions=True,
+                     K=NUM_DSEA_ITERATIONS,
+                     )
 
 
 # Export for evaluation

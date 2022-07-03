@@ -47,14 +47,16 @@ print("Begin imports…")
 
 # ███ Dataset ███
 class MyDataset(torch.utils.data.Dataset):
-    def __init__(self, feature_array, label_array, dtype=np.float32):
+    def __init__(self, feature_array, label_array, weight_array, dtype=np.float32):
         self.features = feature_array.astype(dtype)
         self.labels = label_array
+        self.weights = weight_array
 
     def __getitem__(self, index):
         inputs = self.features[index]
         label = self.labels[index]
-        return inputs, label
+        weight = self.weights[index]
+        return inputs, label, weight
 
     def __len__(self):
         return self.features.shape[0]
@@ -128,7 +130,7 @@ class LightningMLP(pl.LightningModule):
     # A common forward step to compute the loss and labels
     # this is used for training, validation, and testing below
     def _shared_step(self, batch):
-        features, true_labels = batch
+        features, true_labels, sample_weights = batch
         logits = self(features)
 
         # Use CORN loss --------------------------------------
@@ -138,6 +140,7 @@ class LightningMLP(pl.LightningModule):
             logits, true_labels,
             num_classes=self.model.num_classes,
             # weights=torch.zeros_like(true_labels), # TODO: Test
+            weights=sample_weights,
         )
         # ----------------------------------------------------
 
@@ -227,13 +230,10 @@ class CornClassifier():
                 pass
 
             def setup(self, stage=None):
-                self.data_features = X
-                self.data_labels = y
+                # self.data_features = X
+                # self.data_labels = y
 
-                X_train = X
-                y_train = y
-
-                self.train = MyDataset(X_train, y_train)
+                self.train = MyDataset(X, y, sample_weight)
 
             def train_dataloader(self):
                 return DataLoader(
