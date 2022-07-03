@@ -3,7 +3,6 @@ from ca_corn_functions import corn_loss, corn_proba_from_logits
 import b_prepare_data
 from torch.utils.data import DataLoader
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
 from pytorch_lightning.loggers import CSVLogger, WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
 from coral_pytorch.dataset import corn_label_from_logits
@@ -56,6 +55,17 @@ class MyDataset(torch.utils.data.Dataset):
         inputs = self.features[index]
         label = self.labels[index]
         return inputs, label
+
+    def __len__(self):
+        return self.features.shape[0]
+
+
+class MyDatasetPredict(torch.utils.data.Dataset):
+    def __init__(self, feature_array, dtype=np.float32):
+        self.features = feature_array.astype(dtype)
+
+    def __getitem__(self, index):
+        return self.features[index]
 
     def __len__(self):
         return self.features.shape[0]
@@ -164,8 +174,46 @@ class LightningMLP(pl.LightningModule):
 
 
 class CornClassifier():
-    def __init__(self):
-        pass  # TODO
+    def __init__(self, input_size, num_classes):
+        pytorch_model = MultiLayerPerceptron(
+            # input_size=data_module.data_features.shape[1],
+            # num_classes=np.bincount(data_module.data_labels).shape[0],
+            # ---
+            # input_size=X.shape[1],
+            # num_classes=np.bincount(y).shape[0],
+            # ---
+            input_size=input_size,
+            num_classes=num_classes,
+            # ---
+            hidden_units=HIDDEN_UNITS,
+        )
+
+        self.lightning_model = LightningMLP(
+            model=pytorch_model,
+            learning_rate=LEARNING_RATE,
+        )
+
+        callbacks = [
+            RichProgressBar(refresh_rate_per_second=1),
+            ModelCheckpoint(save_top_k=1, mode="min", monitor="valid_mae"),  # save top 1 model
+        ]
+        csv_logger = CSVLogger(save_dir="logs/", name="mlp-corn-cement")
+        # wandb_logger = WandbLogger(project="dsea-corn")
+
+        self.trainer = pl.Trainer(
+            max_epochs=NUM_EPOCHS,
+            callbacks=callbacks,
+            # accelerator='auto',  # Uses GPUs or TPUs if available
+            accelerator='cpu', # restrict to CPU for testing
+            # devices='auto',  # Uses all available GPUs/TPUs if applicable
+            devices=1, # use only one GPU: this preserves my sanity
+            logger=[
+                csv_logger,
+                # wandb_logger
+            ],
+            deterministic=True,
+            log_every_n_steps=10,
+        )
 
     def fit(self, X, y, sample_weight=None):
         """Receives training data only. The wrapper / DSEA should handle all the rest."""
@@ -203,53 +251,45 @@ class CornClassifier():
         data_module = DataModule()
         # data_module.setup()
 
-        # ███ Training ███
-        pytorch_model = MultiLayerPerceptron(
-            # input_size=data_module.data_features.shape[1],
-            # num_classes=np.bincount(data_module.data_labels).shape[0],
-            input_size=X.shape[1],
-            num_classes=np.bincount(y).shape[0],
-            hidden_units=HIDDEN_UNITS,
-        )
-
-        lightning_model = LightningMLP(
-            model=pytorch_model,
-            learning_rate=LEARNING_RATE,
-        )
-
-        callbacks = [
-            RichProgressBar(refresh_rate_per_second=1),
-            ModelCheckpoint(save_top_k=1, mode="min", monitor="valid_mae"),  # save top 1 model
-        ]
-        csv_logger = CSVLogger(save_dir="logs/", name="mlp-corn-cement")
-        # wandb_logger = WandbLogger(project="dsea-corn")
-
-        trainer = pl.Trainer(
-            max_epochs=NUM_EPOCHS,
-            callbacks=callbacks,
-            accelerator='auto',  # Uses GPUs or TPUs if available
-            # devices='auto',  # Uses all available GPUs/TPUs if applicable
-            devices=1, # use only one GPU: this preserves my sanity
-            # accelerator='cpu', # TODO: Test
-            logger=[
-                csv_logger,
-                # wandb_logger
-            ],
-            deterministic=True,
-            log_every_n_steps=10,
-        )
-
         start_time = time.time()
-        # trainer.fit(model=lightning_model, datamodule=data_module)
-        trainer.fit(
-            model=lightning_model,
+        self.trainer.fit(
+            model=self.lightning_model,
             datamodule=data_module,
         )
 
         runtime = (time.time() - start_time)/60
         print(f"Training took {runtime:.2f} min in total.")
 
-        # TODO: remember the best model and…
+        # TODO: remember the best model etc…
+
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        """
+        Input: (samples, features)
+        Output: (samples, classes)
+        """
+        X_dataset = MyDatasetPredict(X)
+
+        X_dataloader = DataLoader(
+            X_dataset, batch_size=BATCH_SIZE,
+            num_workers=NUM_WORKERS,
+            drop_last=True,
+        )
+
+        # wrong; yields predicted_labels, obviously, which isn't our class_probas
+        # y_pred_batches = self.trainer.predict(
+        #     model=self.lightning_model,
+        #     dataloaders=X_dataloader,
+        # )
+
+        all_predicted_labels = []
+        for features in X_dataloader:
+            logits = self.lightning_model(features)
+            predicted_labels = corn_proba_from_logits(logits)
+            all_predicted_labels.append(predicted_labels)
+
+        y_pred = torch.cat(all_predicted_labels)
+
+        return y_pred.detach().numpy()
 
 
 if __name__ == "__main__":

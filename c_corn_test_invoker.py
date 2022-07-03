@@ -1,6 +1,7 @@
 from cherenkovdeconvolution import dsea
 import numpy as np
 from sklearn.model_selection import train_test_split
+# from sklearn.preprocessing import StandardScaler
 #
 import b_prepare_data
 import c_corn
@@ -16,7 +17,10 @@ X, y = b_prepare_data.get_data(dummy=False,
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-classifier = c_corn.CornClassifier()
+classifier = c_corn.CornClassifier(
+    input_size=X.shape[1],
+    num_classes=np.bincount(y).shape[0],
+)
 
 # classifier.fit(X, y)
 
