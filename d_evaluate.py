@@ -48,9 +48,9 @@ fig, axs = plt.subplots(2, 1, figsize=(10, 6))
 
 # plt.hist(BINS[:-1], BINS, weights=spectrum_from_labels(labels), color='red', label='true class')
 
-axs[0].plot(BINS, true_spectrum, drawstyle='steps-mid', color='red', zorder=10, linewidth=3, label='true class')
+axs[0].plot(BINS, true_spectrum, drawstyle='steps-mid', color='red', linewidth=2, label='true class')
 # axs[0].plot(BINS, spectrum_from_labels(predicted_labels), drawstyle='steps-mid', color='royalblue', label='predicted class')
-axs[0].plot(BINS, pred_spectrum, drawstyle='steps-mid', color='green', label='predicted probas')
+axs[0].plot(BINS, pred_spectrum, drawstyle='steps-mid', color='green', zorder=10, label='predicted probas')
 axs[0].set_ylabel('count')
 axs[0].set_yscale('log')
 
@@ -63,8 +63,8 @@ for ax in axs:
     ax.legend()
 
 plt.tight_layout()
-plt.savefig(f'build/corn__hist_log_{run_id()}.pdf')
-plt.savefig(f'build/corn__hist_log_{run_id()}.png')
+plt.savefig(f'build/spectrum_{run_id()}.pdf')
+plt.savefig(f'build/spectrum_{run_id()}.png')
 # wandb_run.log({"hist_log": plt})
 # plt.show()
 
@@ -103,8 +103,8 @@ for i, ax in enumerate(axs.flat):
     ax.grid()
     ax.legend()
 plt.tight_layout()
-plt.savefig(f'build/corn__single_events_{run_id()}.pdf')
-plt.savefig(f'build/corn__single_events_{run_id()}.png')
+plt.savefig(f'build/single_events_{run_id()}.pdf')
+plt.savefig(f'build/single_events_{run_id()}.png')
 
 
 # █ Per-bin spectra
@@ -128,8 +128,8 @@ for i, ax in enumerate(axs.flat):
     ax.grid()
     ax.legend()
 plt.tight_layout()
-plt.savefig(f'build/corn__per_bin_spectra_{run_id()}.pdf')
-plt.savefig(f'build/corn__per_bin_spectra_{run_id()}.png')
+plt.savefig(f'build/per_bin_spectra_{run_id()}.pdf')
+plt.savefig(f'build/per_bin_spectra_{run_id()}.png')
 
 
 # █ Confusion matrix
@@ -143,6 +143,6 @@ plt.savefig(f'build/corn__per_bin_spectra_{run_id()}.png')
 # plt.xlabel('Predicted label')
 # plt.ylabel('True label')
 # plt.title('Confusion Matrix (normalized)')
-# plt.savefig(f'build/corn__confusion_{run_id()}.pdf')
-# plt.savefig(f'build/corn__confusion_{run_id()}.png')
+# plt.savefig(f'build/confusion_{run_id()}.pdf')
+# plt.savefig(f'build/confusion_{run_id()}.png')
 # wandb_run.log({"confusion": plt})

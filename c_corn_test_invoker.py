@@ -1,4 +1,6 @@
+from rich import inspect
 from cherenkovdeconvolution import dsea
+import logging
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -8,6 +10,7 @@ import b_prepare_data
 import c_corn
 from x_config import *
 
+logging.getLogger("pytorch_lightning").setLevel(logging.ERROR)
 
 print("Loading data…")
 X, y = b_prepare_data.get_data(dummy=False,
@@ -25,10 +28,17 @@ classifier = c_corn.CornClassifier(
 
 # classifier.fit(X, y)
 
+def dsea_callback(f, k, alpha, chi2s):
+    print("▒"*10)
+    print(f"Iteration {k}: alpha = {alpha:.3f}, chi2s = {chi2s:.3f}")
+    print(f"f = {f}")
+    print()
+
 f_est, probas = dsea(X_test,
                      X_train,
                      y_train,
                      classifier,
+                     inspect=dsea_callback,
                      return_contributions=True,
                      K=NUM_DSEA_ITERATIONS,
                      )

@@ -85,7 +85,7 @@ class MultiLayerPerceptron(torch.nn.Module):
         all_layers = []
         for hidden_unit in hidden_units:
             all_layers.append(torch.nn.Linear(input_size, hidden_unit))
-            all_layers.append(torch.nn.Dropout(0.2))  # NEW // possible cause for stupid loss
+            # all_layers.append(torch.nn.Dropout(0.2))  # NEW // possible cause for stupid loss
             all_layers.append(torch.nn.ReLU())
             input_size = hidden_unit
 
@@ -119,8 +119,8 @@ class LightningMLP(pl.LightningModule):
 
         # Set up attributes for computing the MAE
         self.train_mae = torchmetrics.MeanAbsoluteError()
-        self.valid_mae = torchmetrics.MeanAbsoluteError()
-        self.test_mae = torchmetrics.MeanAbsoluteError()
+        # self.valid_mae = torchmetrics.MeanAbsoluteError()
+        # self.test_mae = torchmetrics.MeanAbsoluteError()
 
     # Defining the forward method is only necessary
     # if you want to use a Trainer's .predict() method (optional)
@@ -159,17 +159,17 @@ class LightningMLP(pl.LightningModule):
         self.log("train_mae", self.train_mae, on_epoch=True, on_step=False)
         return loss  # this is passed to the optimzer for training
 
-    def validation_step(self, batch, batch_idx):
-        loss, true_labels, predicted_labels = self._shared_step(batch)
-        self.log("valid_loss", loss)
-        self.valid_mae(predicted_labels, true_labels)
-        self.log("valid_mae", self.valid_mae,
-                 on_epoch=True, on_step=False, prog_bar=True)
+    # def validation_step(self, batch, batch_idx):
+    #     loss, true_labels, predicted_labels = self._shared_step(batch)
+    #     self.log("valid_loss", loss)
+    #     self.valid_mae(predicted_labels, true_labels)
+    #     self.log("valid_mae", self.valid_mae,
+    #              on_epoch=True, on_step=False, prog_bar=True)
 
-    def test_step(self, batch, batch_idx):
-        loss, true_labels, predicted_labels = self._shared_step(batch)
-        self.test_mae(predicted_labels, true_labels)
-        self.log("test_mae", self.test_mae, on_epoch=True, on_step=False)
+    # def test_step(self, batch, batch_idx):
+    #     loss, true_labels, predicted_labels = self._shared_step(batch)
+    #     self.test_mae(predicted_labels, true_labels)
+    #     self.log("test_mae", self.test_mae, on_epoch=True, on_step=False)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
@@ -206,14 +206,15 @@ class CornClassifier():
         self.trainer = pl.Trainer(
             max_epochs=NUM_EPOCHS,
             callbacks=callbacks,
-            # accelerator='auto',  # Uses GPUs or TPUs if available
-            accelerator='cpu', # restrict to CPU for testing
+            accelerator='auto',  # Uses GPUs or TPUs if available
+            # accelerator='cpu', # restrict to CPU for testing
             # devices='auto',  # Uses all available GPUs/TPUs if applicable
             devices=1, # use only one GPU: this preserves my sanity
             logger=[
                 csv_logger,
                 # wandb_logger
             ],
+            enable_model_summary=False, # annoying when run in DSEA
             deterministic=True,
             log_every_n_steps=10,
         )
