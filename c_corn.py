@@ -1,4 +1,4 @@
-from x_config import *
+# from x_config import *
 from ca_corn_functions import corn_loss, corn_proba_from_logits
 import b_prepare_data
 from torch.utils.data import DataLoader
@@ -12,6 +12,7 @@ import pytorch_lightning as pl
 import pandas as pd
 import numpy as np
 import time
+import wandb
 print("Begin imports…")
 
 # ours ↓
@@ -23,18 +24,6 @@ print("Begin imports…")
 # # learning rate is already present for some reason
 # wandb.config.num_samples = NROWS
 # wandb.config.num_bins = NUM_BINS
-
-
-# ███ Load data ███
-# print("Loading data…")
-# X, y = get_data(dummy=False, to_numpy=False, nrows=NROWS)
-# y = y.astype(np.int64)  # convert category → int64
-# data_features, data_labels = X, y  # TODO
-
-# print('Number of features:', data_features.shape[1])
-# print('Number of examples:', data_features.shape[0])
-# print('Labels:', np.unique(data_labels.values))
-# print('Label distribution:', np.bincount(data_labels))
 
 
 # ███ Performance baseline ███
@@ -186,12 +175,12 @@ class CornClassifier():
             input_size=input_size,
             num_classes=num_classes,
             # ---
-            hidden_units=HIDDEN_UNITS,
+            hidden_units=wandb.config.hidden_units,
         )
 
         self.lightning_model = LightningMLP(
             model=pytorch_model,
-            learning_rate=LEARNING_RATE,
+            learning_rate=wandb.config.learning_rate,
         )
 
         callbacks = [
@@ -203,7 +192,7 @@ class CornClassifier():
         wandb_logger = WandbLogger()  # init happens somewhere else
 
         self.trainer = pl.Trainer(
-            max_epochs=NUM_EPOCHS,
+            max_epochs=wandb.config.num_epochs,
             callbacks=callbacks,
             accelerator='auto',  # Uses GPUs or TPUs if available
             # accelerator='cpu', # restrict to CPU for testing
@@ -237,8 +226,8 @@ class CornClassifier():
 
             def train_dataloader(self):
                 return DataLoader(
-                    self.train, batch_size=BATCH_SIZE,
-                    num_workers=NUM_WORKERS,
+                    self.train, batch_size=wandb.config.batch_size,
+                    num_workers=wandb.config.num_workers,
                     drop_last=True,
                 )
 
@@ -268,8 +257,8 @@ class CornClassifier():
         X_dataset = MyDatasetPredict(X)
 
         X_dataloader = DataLoader(
-            X_dataset, batch_size=BATCH_SIZE,
-            num_workers=NUM_WORKERS,
+            X_dataset, batch_size=wandb.config.batch_size,
+            num_workers=wandb.config.num_workers,
             drop_last=False,  # This is important for evaluation
         )
 

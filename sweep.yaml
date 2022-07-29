@@ -1,0 +1,25 @@
+method: bayes
+metric:
+  goal: minimize
+  name: chi2s
+parameters:
+  learning_rate:
+    # value: 0.00005
+    distribution: uniform
+    max: 0.01
+    min: 0.0025
+  nrows:
+    value: 200000
+  num_bins:
+    value: 10
+  batch_size:
+    value: 2048
+  num_epochs:
+    value: 4
+  num_dsea_iterations:
+    value: 4
+  hidden_units:
+    value: [120, 240, 120, 12]
+  num_workers:
+    value: 48
+program: c_corn_test_invoker.py
