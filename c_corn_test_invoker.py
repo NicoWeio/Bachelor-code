@@ -37,10 +37,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 classifier = c_corn.CornClassifier(
     input_size=X.shape[1],
     num_classes=np.bincount(y).shape[0],
-    wandb=wandb,
 )
-
-# classifier.fit(X, y)
 
 
 def dsea_callback(f, k, alpha, chi2s):
