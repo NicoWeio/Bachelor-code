@@ -14,8 +14,6 @@ import numpy as np
 import time
 print("Begin imports…")
 
-
-# import wandb
 # ours ↓
 
 
@@ -198,10 +196,11 @@ class CornClassifier():
 
         callbacks = [
             RichProgressBar(refresh_rate_per_second=1),
-            ModelCheckpoint(save_top_k=1, mode="min", monitor="valid_mae"),  # save top 1 model
+            # TODO: We use train_mae, not valid_mae, because don't have validation data here. Is this correct?
+            ModelCheckpoint(save_top_k=1, mode="min", monitor="train_mae"),  # save top 1 model
         ]
         csv_logger = CSVLogger(save_dir="logs/", name="mlp-corn-cement")
-        # wandb_logger = WandbLogger(project="dsea-corn")
+        wandb_logger = WandbLogger()  # init happens somewhere else
 
         self.trainer = pl.Trainer(
             max_epochs=NUM_EPOCHS,
@@ -209,14 +208,14 @@ class CornClassifier():
             accelerator='auto',  # Uses GPUs or TPUs if available
             # accelerator='cpu', # restrict to CPU for testing
             # devices='auto',  # Uses all available GPUs/TPUs if applicable
-            devices=1, # use only one GPU: this preserves my sanity
+            devices=1,  # use only one GPU: this preserves my sanity
             logger=[
-                csv_logger,
-                # wandb_logger
+                # csv_logger,
+                wandb_logger,
             ],
-            enable_model_summary=False, # annoying when run in DSEA
+            enable_model_summary=False,  # annoying when run in DSEA
             deterministic=True,
-            log_every_n_steps=10,
+            log_every_n_steps=1,
         )
 
     def fit(self, X, y, sample_weight=None):
@@ -247,6 +246,9 @@ class CornClassifier():
         data_module = DataModule()
         # data_module.setup()
 
+        # reset epoch counter
+        self.trainer.fit_loop.epoch_progress.reset_on_epoch()
+
         start_time = time.time()
         self.trainer.fit(
             model=self.lightning_model,
@@ -268,7 +270,7 @@ class CornClassifier():
         X_dataloader = DataLoader(
             X_dataset, batch_size=BATCH_SIZE,
             num_workers=NUM_WORKERS,
-            drop_last=False, # This is important for evaluation
+            drop_last=False,  # This is important for evaluation
         )
 
         # wrong; yields predicted_labels, obviously, which isn't our class_probas
