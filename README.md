@@ -27,6 +27,11 @@
 - `AttributeError: module 'setuptools._distutils' has no attribute 'version'`
   - `pip install setuptools==59.5.0`
 
+## Code references
+- [`class LogisticAT`](https://github.com/fabianp/mord/blob/ef578a79bf8374d84b77f246454b06d81a620630/mord/threshold_based.py#L167)
+- https://github.com/mirkobunse/CherenkovDeconvolution.py/blob/master/cherenkovdeconvolution/methods/dsea.py
+- https://github.com/janjaek/dsea_mord/blob/master/dsea_best_features.ipynb
+
 ## Literature
 - https://raschka-research-group.github.io/coral-pytorch/tutorials/pytorch_lightning/ordinal-corn_cement
 - [https://mail.sebastianraschka.com/pdf/slides/2022-02_rework-coral-lightning.pdf](Easy-to-understand slides explaining CORN/CORAL)
