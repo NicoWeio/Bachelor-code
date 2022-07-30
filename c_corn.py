@@ -27,10 +27,10 @@ print("Begin imports…")
 
 
 # ███ Performance baseline ███
-# avg_prediction = np.median(data_labels.values)  # median minimizes MAE
-# baseline_mae = np.mean(np.abs(data_labels.values - avg_prediction))
-# print(f'Baseline MAE: {baseline_mae:.2f}')
-
+def baseline_mae(y):
+    avg_prediction = np.median(y)  # median minimizes MAE
+    baseline_mae = np.mean(np.abs(y - avg_prediction))
+    return baseline_mae
 
 # ███ Dataset ███
 class MyDataset(torch.utils.data.Dataset):
@@ -106,8 +106,7 @@ class LightningMLP(pl.LightningModule):
 
         # Set up attributes for computing the MAE
         self.train_mae = torchmetrics.MeanAbsoluteError()
-        # self.valid_mae = torchmetrics.MeanAbsoluteError()
-        # self.test_mae = torchmetrics.MeanAbsoluteError()
+        # self.train_chi2 = torchmetrics.TODO()
 
     # Defining the forward method is only necessary
     # if you want to use a Trainer's .predict() method (optional)
@@ -143,20 +142,12 @@ class LightningMLP(pl.LightningModule):
         loss, true_labels, predicted_labels = self._shared_step(batch)
         self.log("train_loss", loss)
         self.train_mae(predicted_labels, true_labels)
-        self.log("train_mae", self.train_mae, on_epoch=True, on_step=False)
+        self.log("train_mae", self.train_mae, on_epoch=True, on_step=False, prog_bar=True) # bottleneck?
+        # self.train_chi2(predicted_labels, true_labels)
+        # self.log("train_chi2", self.train_chi2, on_epoch=True, on_step=False, prog_bar=True) # bottleneck?
         return loss  # this is passed to the optimzer for training
 
-    # def validation_step(self, batch, batch_idx):
-    #     loss, true_labels, predicted_labels = self._shared_step(batch)
-    #     self.log("valid_loss", loss)
-    #     self.valid_mae(predicted_labels, true_labels)
-    #     self.log("valid_mae", self.valid_mae,
-    #              on_epoch=True, on_step=False, prog_bar=True)
-
-    # def test_step(self, batch, batch_idx):
-    #     loss, true_labels, predicted_labels = self._shared_step(batch)
-    #     self.test_mae(predicted_labels, true_labels)
-    #     self.log("test_mae", self.test_mae, on_epoch=True, on_step=False)
+    # validation_step and test_step removed
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
@@ -237,6 +228,9 @@ class CornClassifier():
 
         # reset epoch counter
         self.trainer.fit_loop.epoch_progress.reset_on_epoch()
+
+        # print baseline MAE
+        print(f'Baseline MAE: {baseline_mae(y):.2f}')
 
         start_time = time.time()
         self.trainer.fit(

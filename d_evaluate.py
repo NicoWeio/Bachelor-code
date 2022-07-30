@@ -3,7 +3,13 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
-from x_config import *
+from x_config import config  # TODO!
+from x_config import run_id as _run_id
+
+run_id = lambda: _run_id(config)
+
+NUM_BINS = config['num_bins']
+
 
 print("Loading data…")
 eval_df = pd.read_hdf('build_large/eval.hdf5', key='eval')

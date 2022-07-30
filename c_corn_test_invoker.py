@@ -1,29 +1,19 @@
 from rich import inspect
-from cherenkovdeconvolution import dsea
+from cherenkovdeconvolution import dsea, util
 import logging
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-# from sklearn.preprocessing import StandardScaler
 import wandb
 #
 import b_prepare_data
 import c_corn
-# from x_config import *
+from x_config import config as default_config
 
 logging.getLogger("pytorch_lightning").setLevel(logging.ERROR)
 
-wandb.init(project="dsea-corn")
-# wandb.config.update({
-#     'batch_size': BATCH_SIZE,
-#     'num_epochs': NUM_EPOCHS,
-#     'num_dsea_iterations': NUM_DSEA_ITERATIONS,
-#     'learning_rate': LEARNING_RATE,
-#     'num_workers': NUM_WORKERS,
-#     'nrows': NROWS,
-#     'num_bins': NUM_BINS,
-#     'hidden_units': HIDDEN_UNITS,
-# })
+wandb.init(project="dsea-corn", config=default_config)
+
 
 print("Loading data…")
 X, y = b_prepare_data.get_data(dummy=False,
@@ -41,10 +31,16 @@ classifier = c_corn.CornClassifier(
 
 
 def dsea_callback(f, k, alpha, chi2s):
-    wandb.log({'f': f, 'k': k, 'alpha': alpha, 'chi2s': chi2s})
+    """
+    f: prior
+    k: iteration
+    alpha: step size
+    chi2s: Chi Square distance between iterations
+    """
+    wandb.log({'f': f, 'k': k, 'alpha': alpha, 'chi2s_iters': chi2s})
 
     print("▒"*10)
-    print(f"Iteration {k} of {wandb.config.num_dsea_iterations}: alpha = {alpha:.3f}, chi2s = {chi2s:.3f}")
+    print(f"Iteration {k} of {wandb.config.num_dsea_iterations}: alpha = {alpha:.3f}, chi2s = {chi2s:.4f}")
     print(f"f = {f}")
     print()
 
@@ -60,12 +56,12 @@ f_est, probas = dsea(X_test,
 
 
 # Export for evaluation
-# eval_df = pd.DataFrame({
-#     'labels': y_test,
-#     # 'predicted_labels': all_predicted_labels,
-#     'predicted_probas': probas.tolist()
-# })
-# # print("Saving eval CSV…")
-# # eval_df.to_csv('build_large/eval.csv', index=False)
-# print("Saving eval HDF5…")
-# eval_df.to_hdf('build_large/eval.hdf5', key='eval', index=False)
+eval_df = pd.DataFrame({
+    'labels': y_test,
+    # 'predicted_labels': all_predicted_labels,
+    'predicted_probas': probas.tolist()
+})
+# print("Saving eval CSV…")
+# eval_df.to_csv('build_large/eval.csv', index=False)
+print("Saving eval HDF5…")
+eval_df.to_hdf('build_large/eval.hdf5', key='eval', index=False)
