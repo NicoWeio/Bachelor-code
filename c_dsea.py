@@ -36,6 +36,8 @@ def run(X_train, X_test, y_train):
                          inspect=dsea_callback,
                          return_contributions=True,
                          K=wandb.config.num_dsea_iterations,
+                         fixweighting=wandb.config.fixweighting,
+                        #  alpha=TODO,
                          )
 
     return probas

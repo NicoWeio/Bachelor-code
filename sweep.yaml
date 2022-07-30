@@ -1,7 +1,7 @@
 method: bayes
 metric:
   goal: minimize
-  name: chi2s
+  name: wd_test
 parameters:
   learning_rate:
     # value: 0.00005
@@ -15,7 +15,10 @@ parameters:
   num_dsea_iterations:
     distribution: int_uniform
     min: 1
-    max: 15
+    max: 20
+  fixweighting:
+    values: [true, false]
+  # TODO: step sizes
   batch_size:
     value: 2048
   hidden_units:
@@ -26,4 +29,4 @@ parameters:
     value: 10
   num_workers:
     value: 48
-program: c_corn_test_invoker.py
+program: x_run.py

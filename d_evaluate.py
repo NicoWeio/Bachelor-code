@@ -3,14 +3,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
+from scipy.stats import wasserstein_distance
 from da_evaluate_plots import *
 from da_evaluate_plots import plot_spectrum
 from x_config import config  # TODO!
-from x_config import run_id as _run_id
-
-
-def run_id(): return _run_id(config)
-
 
 NUM_BINS = config['num_bins']
 BINS = np.arange(NUM_BINS)
@@ -44,6 +40,9 @@ def evaluate(true_labels, predicted_probas):
     true_spectrum = spectrum_from_labels(true_labels)
     pred_spectrum = spectrum_from_probas(predicted_probas)
     # pred_spectrum_class = spectrum_from_labels(predicted_labels)
+
+    print("Wasserstein distance:", wasserstein_distance(true_spectrum, pred_spectrum))
+    wandb.log({'wd_test': wasserstein_distance(true_spectrum, pred_spectrum)})
 
     # ███ Plots
     plot_spectrum(true_spectrum, pred_spectrum, BINS)
