@@ -5,11 +5,12 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix
 from x_config import config  # TODO!
 from x_config import run_id as _run_id
+import wandb
 
 run_id = lambda: _run_id(config)
 
 
-def plot_spectrum(true_spectrum, pred_spectrum, BINS, NUM_BINS):
+def plot_spectrum(true_spectrum, pred_spectrum, BINS):
     fig, axs = plt.subplots(2, 1, figsize=(10, 6))
 
     # plt.hist(BINS[:-1], BINS, weights=spectrum_from_labels(labels), color='red', label='true class')
@@ -24,15 +25,16 @@ def plot_spectrum(true_spectrum, pred_spectrum, BINS, NUM_BINS):
 
     for ax in axs:
         ax.set_xlabel('class')
-        ax.set_xticks(np.arange(NUM_BINS))
+        ax.set_xticks(BINS)
         ax.grid()
         ax.legend()
 
     plt.tight_layout()
     plt.savefig(f'build/spectrum_{run_id()}.pdf')
     plt.savefig(f'build/spectrum_{run_id()}.png')
-    # wandb_run.log({"hist_log": plt})
-    # plt.show()
+
+    wandb.log({"spectrum": fig})
+    return fig
 
 
 # █ Single events

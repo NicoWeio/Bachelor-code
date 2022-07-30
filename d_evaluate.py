@@ -32,6 +32,9 @@ def spectrum_from_probas(probas, norm=True):
 
 
 def evaluate(true_labels, predicted_probas):
+    """
+    Evaluation & Plots
+    """
     # █ Verification
     # → Every bin is represented in the (true) `labels`
     assert np.all(np.isin(BINS, true_labels)), "Not all bins are represented in the labels!"
@@ -43,7 +46,7 @@ def evaluate(true_labels, predicted_probas):
     # pred_spectrum_class = spectrum_from_labels(predicted_labels)
 
     # ███ Plots
-    plot_spectrum(true_spectrum, pred_spectrum, BINS, NUM_BINS)
+    plot_spectrum(true_spectrum, pred_spectrum, BINS)
 
 
 if __name__ == '__main__':
