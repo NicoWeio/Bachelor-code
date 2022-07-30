@@ -12,8 +12,20 @@
   - discretizes the energies
   - applies `StandardScaler`
   - does not write to disk; instead, it's intended to be invoked by other Python files
-- (TODO)
-  - the following files will be renamed in the future…
+- [`c_corn.py`](c_corn.py)
+  - provides the CORN classifier as a sklearn classifier
+  - [`ca_corn_functions.py`](ca_corn_functions.py)
+    - provides helper functions like `loss` and `proba_from_logits`
+- [`c_dsea.py`](c_dsea.py)
+  - …
+- [`d_evaluate.py`](d_evaluate.py)
+  - evaluates the classifier's performance
+  - [`da_evaluate_plots.py`](da_evaluate_plots.py)
+    - outputs plots to [`build/plots`](build/plots)
+- [`x_config.py`](x_config.py)
+  - defines the configuration for the experiment
+- [`x_run.py`](x_run.py)
+  - runs the experiment
 
 ## TODOs
 - MAE → EMD (Wasserstein distance)?

@@ -1,29 +1,16 @@
-# from x_config import *
-from ca_corn_functions import corn_loss, corn_proba_from_logits
-import b_prepare_data
-from torch.utils.data import DataLoader
-from sklearn.preprocessing import StandardScaler
-from pytorch_lightning.loggers import CSVLogger, WandbLogger
-from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
-from coral_pytorch.dataset import corn_label_from_logits
-import torchmetrics
-import torch
-import pytorch_lightning as pl
-import pandas as pd
-import numpy as np
 import time
+
+import numpy as np
+import pytorch_lightning as pl
+import torch
+import torchmetrics
+from coral_pytorch.dataset import corn_label_from_logits
+from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
+from pytorch_lightning.loggers import CSVLogger, WandbLogger
+from torch.utils.data import DataLoader
+
 import wandb
-print("Begin imports…")
-
-# ours ↓
-
-
-# wandb_run = wandb.init(project="dsea-corn")
-# wandb.config.batch_size = BATCH_SIZE
-# wandb.config.num_epochs = NUM_EPOCHS
-# # learning rate is already present for some reason
-# wandb.config.num_samples = NROWS
-# wandb.config.num_bins = NUM_BINS
+from ca_corn_functions import corn_loss, corn_proba_from_logits
 
 
 # ███ Performance baseline ███
@@ -37,7 +24,7 @@ class MyDataset(torch.utils.data.Dataset):
     def __init__(self, feature_array, label_array, weight_array, dtype=np.float32):
         self.features = feature_array.astype(dtype)
         self.labels = label_array
-        self.weights = weight_array
+        self.weights = weight_array if weight_array is not None else np.ones(self.features.shape[0])
 
     def __getitem__(self, index):
         inputs = self.features[index]
@@ -73,7 +60,7 @@ class MultiLayerPerceptron(torch.nn.Module):
         for hidden_unit in hidden_units:
             all_layers.append(torch.nn.Linear(input_size, hidden_unit))
             # all_layers.append(torch.nn.Dropout(0.2))  # NEW // possible cause for stupid loss
-            all_layers.append(torch.nn.ReLU())
+            all_layers.append(torch.nn.LeakyReLU()) # TODO: TEST
             input_size = hidden_unit
 
         # CORN output layer -------------------------------------------
