@@ -5,7 +5,7 @@ metric:
 parameters:
   learning_rate:
     # value: 0.00005
-    distribution: uniform
+    distribution: uniform # ?
     min: 0.00001
     max: 1.0 # ?
   num_epochs:
@@ -17,10 +17,11 @@ parameters:
     min: 1
     max: 20
   fixweighting:
-    values: [true, false]
+    values: ['always', 'never', 'iter']
   # TODO: step sizes
   batch_size:
-    value: 2048
+  # 2048 is the manually-found optimum, but on an old version of this code.
+    values: [512, 1024, 2048]
   hidden_units:
     value: [120, 240, 120, 12]
   nrows:

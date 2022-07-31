@@ -7,13 +7,14 @@ config = {
     'num_bins': 10,
     # █ CORN
     'batch_size': 2**11,  # ✅
-    'learning_rate': 0.0001159,
-    'num_epochs': 5,
+    'learning_rate': 0.0001,
+    'num_epochs': 10,
     'hidden_units': (120, 240, 120, 12),
     'num_workers': 48,  # no speedup compared to 0
     # █ DSEA
-    'num_dsea_iterations': 5,
-    'fixweighting': True,
+    'num_dsea_iterations': 3,
+    'fixweighting': 'always',
+    # 'use_dsea': False, # TODO: respect this
 }
 
 
