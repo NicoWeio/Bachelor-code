@@ -29,6 +29,11 @@ def run(X_train, X_test, y_train):
         print(f"f = {f}")
         print()
 
+
+        if any(f == 0):
+            wandb.log({'f_broken': True})
+            raise Exception("f is messed up – aborting…")
+
     f_est, probas = dsea(X_test,
                          X_train,
                          y_train,
