@@ -24,7 +24,7 @@ def run():
     y_test_pred = c_dsea.run(X_train, X_test, y_train)
 
     print("Evaluating model…")
-    d_evaluate.evaluate(y_test, y_test_pred)
+    d_evaluate.evaluate(y_test, y_test_pred, save=True)
 
 
 if __name__ == '__main__':

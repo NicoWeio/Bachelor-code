@@ -10,7 +10,7 @@ import wandb
 run_id = lambda: _run_id(config)
 
 
-def plot_spectrum(true_spectrum, pred_spectrum, BINS):
+def plot_spectrum(true_spectrum, pred_spectrum, BINS, save=False):
     fig, axs = plt.subplots(2, 1, figsize=(10, 6))
 
     # plt.hist(BINS[:-1], BINS, weights=spectrum_from_labels(labels), color='red', label='true class')
@@ -30,8 +30,9 @@ def plot_spectrum(true_spectrum, pred_spectrum, BINS):
         ax.legend()
 
     plt.tight_layout()
-    plt.savefig(f'build/spectrum_{run_id()}.pdf')
-    plt.savefig(f'build/spectrum_{run_id()}.png')
+    if save:
+        plt.savefig(f'build/spectrum_{run_id()}.pdf')
+        plt.savefig(f'build/spectrum_{run_id()}.png')
 
     wandb.log({"spectrum": fig})
     return fig

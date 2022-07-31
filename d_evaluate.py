@@ -27,9 +27,10 @@ def spectrum_from_probas(probas, norm=True):
     return spectrum
 
 
-def evaluate(true_labels, predicted_probas):
+def evaluate(true_labels, predicted_probas, save=False):
     """
-    Evaluation & Plots
+    Evaluation & Plots.
+    To be called on the test set.
     """
     # █ Verification
     # → Every bin is represented in the (true) `labels`
@@ -45,7 +46,7 @@ def evaluate(true_labels, predicted_probas):
     wandb.log({'wd_test': wasserstein_distance(true_spectrum, pred_spectrum)})
 
     # ███ Plots
-    plot_spectrum(true_spectrum, pred_spectrum, BINS)
+    plot_spectrum(true_spectrum, pred_spectrum, BINS, save=save)
 
 
 if __name__ == '__main__':
