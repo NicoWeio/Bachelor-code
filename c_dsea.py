@@ -42,7 +42,7 @@ def run(X_train, X_test, y_train):
                          return_contributions=True,
                          K=wandb.config.num_dsea_iterations,
                          fixweighting=wandb.config.fixweighting,
-                        #  alpha=TODO,
+                         alpha=wandb.config.alpha,
                          )
 
     return probas

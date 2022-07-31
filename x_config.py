@@ -14,6 +14,7 @@ config = {
     # █ DSEA
     'num_dsea_iterations': 3,
     'fixweighting': 'always',
+    'alpha': 1,
     # 'use_dsea': False, # TODO: respect this
 }
 
