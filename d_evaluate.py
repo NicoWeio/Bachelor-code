@@ -2,11 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score, confusion_matrix, jaccard_score
 from scipy.stats import wasserstein_distance
 from da_evaluate_plots import *
 from da_evaluate_plots import plot_spectrum
 from x_config import config  # TODO!
+from cherenkovdeconvolution.util import chi2s
 
 NUM_BINS = config['num_bins']
 BINS = np.arange(NUM_BINS)
@@ -42,8 +43,18 @@ def evaluate(true_labels, predicted_probas, save=False):
     pred_spectrum = spectrum_from_probas(predicted_probas)
     # pred_spectrum_class = spectrum_from_labels(predicted_labels)
 
-    print("Wasserstein distance:", wasserstein_distance(true_spectrum, pred_spectrum))
-    wandb.log({'wd_test': wasserstein_distance(true_spectrum, pred_spectrum)})
+    metrics = {
+        # 'accuracy': np.mean(true_labels == np.argmax(predicted_probas, axis=1)),
+        'accuracy': accuracy_score(true_labels, np.argmax(predicted_probas, axis=1)),
+        'chi2': chi2s(true_spectrum, pred_spectrum),
+        'jaccard': jaccard_score(true_labels, np.argmax(predicted_probas, axis=1), average='micro'), # TODO: Which average mode to choose?
+        'wd': wasserstein_distance(true_spectrum, pred_spectrum),
+    }
+    DATASET = 'test'
+    metrics = {f'{k}_{DATASET}': v for k, v in metrics.items()}
+
+    print(*[f"{k}: {v:.4f}" for k, v in metrics.items()], sep='\n')
+    wandb.log(metrics)
 
     # ███ Plots
     plot_spectrum(true_spectrum, pred_spectrum, BINS, save=save)
