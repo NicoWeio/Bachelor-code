@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 import wandb
 
@@ -41,3 +42,19 @@ def get_data(dummy=True, nrows=None):
         y = df['E_discr']
 
     return X, y.to_numpy()
+
+
+def get_train_test_data():
+    X, y = get_data(dummy=False,
+                    #    to_numpy=True,
+                    nrows=wandb.config.nrows,
+                    )
+    # y = y.astype(np.int64)  # convert category → int64
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=0.2,
+        random_state=42,
+    )
+
+    return X_train, X_test, y_train, y_test
