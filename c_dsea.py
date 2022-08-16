@@ -9,13 +9,13 @@ from x_config import config as default_config
 logging.getLogger("pytorch_lightning").setLevel(logging.ERROR)
 
 
-def run(X_train, X_test, y_train):
+def run(X_train, X_test, y_train, interim_eval_callback):
     classifier = c_corn.CornClassifier(
         input_size=X_train.shape[1],
         num_classes=np.bincount(y_train).shape[0],
     )
 
-    def dsea_callback(f, k, alpha, chi2s):
+    def dsea_callback(f, proba, k, alpha, chi2s):
         """
         f: prior
         k: iteration
@@ -29,6 +29,9 @@ def run(X_train, X_test, y_train):
         print(f"f = {f}")
         print()
 
+        if proba is not None:  # not set during first iteration
+            # TODO: duplicate call during last iteration
+            interim_eval_callback(proba)
 
         if any(f == 0):
             wandb.log({'f_broken': True})

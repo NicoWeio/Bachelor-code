@@ -20,8 +20,11 @@ def run():
 
     # f_test_true = np.bincount(y_test) / wandb.config.num_bins
 
+    def interim_eval_cb(y_test_pred):
+        d_evaluate.evaluate(y_test, y_test_pred)
+
     print("Training model…")
-    y_test_pred = c_dsea.run(X_train, X_test, y_train)
+    y_test_pred = c_dsea.run(X_train, X_test, y_train, interim_eval_cb)
 
     print("Evaluating model…")
     d_evaluate.evaluate(y_test, y_test_pred, save=True)
