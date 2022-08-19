@@ -1,10 +1,11 @@
-from cherenkovdeconvolution import dsea
 import logging
+
 import numpy as np
-import wandb
-#
+
+from ca_dsea_functions import *
 import c_corn
-from x_config import config as default_config
+import wandb
+from cherenkovdeconvolution import dsea
 
 logging.getLogger("pytorch_lightning").setLevel(logging.ERROR)
 
@@ -26,7 +27,7 @@ def run(X_train, X_test, y_train, interim_eval_callback):
 
         print("▒"*10)
         print(f"Iteration {k} of {wandb.config.num_dsea_iterations}: alpha = {alpha:.3f}, chi2s_iters = {chi2s:.4f}")
-        print(f"f = {f}")
+        print(f"f = {f}")  # TODO: better formatting
         print()
 
         if proba is not None:  # not set during first iteration
@@ -35,7 +36,12 @@ def run(X_train, X_test, y_train, interim_eval_callback):
 
         if any(f == 0):
             wandb.log({'f_broken': True})
-            raise Exception("f is messed up – aborting…")
+            # raise Exception("f is messed up – aborting…")
+            print("WARN: f has entries == 0")
+            # TODO: Can we recover from this?
+
+    # alpha=wandb.config.alpha
+    alpha = get_adaptive_alpha(X_train, X_test, y_train)
 
     f_est, probas = dsea(X_test,
                          X_train,
@@ -45,19 +51,8 @@ def run(X_train, X_test, y_train, interim_eval_callback):
                          return_contributions=True,
                          K=wandb.config.num_dsea_iterations,
                          fixweighting=wandb.config.fixweighting,
-                         alpha=wandb.config.alpha,
+                         alpha=alpha,
+                         epsilon=wandb.config.epsilon,
                          )
 
     return probas
-
-# if __name__ == "__main__":
-#     print("Saving eval HDF5…")
-#     # Export for evaluation
-#     eval_df = pd.DataFrame({
-#         'labels': y_test,
-#         # 'predicted_labels': all_predicted_labels,
-#         'predicted_probas': probas.tolist()
-#     })
-#     # print("Saving eval CSV…")
-#     # eval_df.to_csv('build_large/eval.csv', index=False)
-#     eval_df.to_hdf('build_large/eval.hdf5', key='eval', index=False)
