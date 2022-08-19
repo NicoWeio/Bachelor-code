@@ -58,6 +58,7 @@ def evaluate(true_labels, predicted_probas, save=False):
 
     # ███ Plots
     plot_spectrum(true_spectrum, pred_spectrum, BINS, save=save)
+    plot_single_events(true_labels, predicted_probas, BINS, save=save)
 
 
 if __name__ == '__main__':

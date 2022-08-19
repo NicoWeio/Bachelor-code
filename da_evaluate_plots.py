@@ -39,7 +39,9 @@ def plot_spectrum(true_spectrum, pred_spectrum, BINS, save=False):
 
 
 # █ Single events
-def plot_single_events():
+def plot_single_events(true_labels, predicted_probas, BINS, save=False):
+    NUM_BINS = len(BINS)
+
     SINGLE_EVENTS_GRIDSIZE = (4, 4)
     SINGLE_EVENTS_NUM = SINGLE_EVENTS_GRIDSIZE[0] * SINGLE_EVENTS_GRIDSIZE[1]
 
@@ -48,11 +50,11 @@ def plot_single_events():
     # events_per_class = SINGLE_EVENTS_NUM // NUM_BINS + 1  # rounding up so all subplots are filled
     sample_indices = []
     for i in range(NUM_BINS):
-        possible_indices = np.where(labels == i)[0]
+        possible_indices = np.where(true_labels == i)[0]
         sample_indices += np.random.choice(possible_indices, events_per_class, replace=False).tolist()
 
     # → random samples
-    # sample_indices = np.random.choice(len(labels), SINGLE_EVENTS_NUM, replace=False).tolist()
+    # sample_indices = np.random.choice(len(true_labels), SINGLE_EVENTS_NUM, replace=False).tolist()
 
     fig, axs = plt.subplots(
         # SINGLE_EVENTS_GRIDSIZE[0], SINGLE_EVENTS_GRIDSIZE[1],
@@ -65,7 +67,7 @@ def plot_single_events():
             continue
 
         sample_i = sample_indices[i]
-        ax.axvline(labels[sample_i], color='red', linestyle='--', label='true class')
+        ax.axvline(true_labels[sample_i], color='red', linestyle='--', label='true class')
         ax.plot(BINS, predicted_probas[sample_i], drawstyle='steps-mid', color='green', label='predicted probas')
         ax.set_xlabel('class')
         ax.set_ylabel('probability')
@@ -73,8 +75,14 @@ def plot_single_events():
         ax.grid()
         ax.legend()
     plt.tight_layout()
-    plt.savefig(f'build/single_events_{run_id()}.pdf')
-    plt.savefig(f'build/single_events_{run_id()}.png')
+
+    if save:
+        plt.savefig(f'build/single_events_{run_id()}.pdf')
+        plt.savefig(f'build/single_events_{run_id()}.png')
+
+    # TODO: Plotly does not like this :/
+    # wandb.log({"single_events": fig})
+    return fig
 
 
 # █ Per-bin spectra
