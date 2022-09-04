@@ -27,7 +27,8 @@ def run(X_train, X_test, y_train, interim_eval_callback):
 
         print("▒"*10)
         print(f"Iteration {k} of {wandb.config.num_dsea_iterations}: alpha = {alpha:.3f}, chi2s_iters = {chi2s:.4f}")
-        print(f"f = {f}")  # TODO: better formatting
+        with np.printoptions(precision=3, suppress=True):  # disables scientific notation
+            print(f"f = {f}")
         print()
 
         if proba is not None:  # not set during first iteration
