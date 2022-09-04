@@ -42,7 +42,7 @@ def plot_spectrum(true_spectrum, pred_spectrum, BINS, save=False):
 def plot_single_events(true_labels, predicted_probas, BINS, save=False):
     NUM_BINS = len(BINS)
 
-    SINGLE_EVENTS_GRIDSIZE = (4, 4)
+    SINGLE_EVENTS_GRIDSIZE = (2, 5)
     SINGLE_EVENTS_NUM = SINGLE_EVENTS_GRIDSIZE[0] * SINGLE_EVENTS_GRIDSIZE[1]
 
     # → one sample for each class
@@ -69,11 +69,17 @@ def plot_single_events(true_labels, predicted_probas, BINS, save=False):
         sample_i = sample_indices[i]
         ax.axvline(true_labels[sample_i], color='red', linestyle='--', label='true class')
         ax.plot(BINS, predicted_probas[sample_i], drawstyle='steps-mid', color='green', label='predicted probas')
+        ax.set_xticks(BINS)
         ax.set_xlabel('class')
         ax.set_ylabel('probability')
         ax.set_yscale('log')
         ax.grid()
-        ax.legend()
+        # ax.legend()
+
+    # TODO: TEST
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc='upper center')
+
     plt.tight_layout()
 
     if save:
@@ -86,20 +92,20 @@ def plot_single_events(true_labels, predicted_probas, BINS, save=False):
 
 
 # █ Per-bin spectra
-def plot_per_bin_spectra():
-    GRIDSIZE = (3, 4)
+def plot_per_bin_spectra(true_labels, predicted_probas, BINS, save=False):
+    GRIDSIZE = (2, 5)
     fig, axs = plt.subplots(
         *GRIDSIZE,
         figsize=(GRIDSIZE[1] * 5, GRIDSIZE[0] * 5)
     )
     # TODO: iterate over bins instead of axes for clarity
     for i, ax in enumerate(axs.flat):
-        if i >= NUM_BINS:
+        if i >= len(BINS):
             ax.axis('off')
             continue
 
         ax.axvline(i, color='red', linestyle='--', label='true class')
-        ax.plot(BINS, spectrum_from_probas(predicted_probas[labels == i]),
+        ax.plot(BINS, spectrum_from_probas(predicted_probas[true_labels == i]),
                 drawstyle='steps-mid', color='green', label='predicted probas (→ spectrum)')
         ax.set_xlabel('class')
         ax.set_ylabel('count')
@@ -107,8 +113,10 @@ def plot_per_bin_spectra():
         ax.grid()
         ax.legend()
     plt.tight_layout()
-    plt.savefig(f'build/per_bin_spectra_{run_id()}.pdf')
-    plt.savefig(f'build/per_bin_spectra_{run_id()}.png')
+
+    if save:
+        plt.savefig(f'build/per_bin_spectra_{run_id()}.pdf')
+        plt.savefig(f'build/per_bin_spectra_{run_id()}.png')
 
 
 # def plot_confusion_matrix():
