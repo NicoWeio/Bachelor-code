@@ -48,7 +48,7 @@ class MyDatasetPredict(torch.utils.data.Dataset):
 
 
 # ███ Regular PyTorch Module ███
-class MultiLayerPerceptron(torch.nn.Module):
+class CornMlp(torch.nn.Module):
     def __init__(self, input_size, hidden_units, num_classes):
         super().__init__()
 
@@ -143,7 +143,7 @@ class LightningMLP(pl.LightningModule):
 
 class CornClassifier():
     def __init__(self, input_size, num_classes):
-        pytorch_model = MultiLayerPerceptron(
+        pytorch_model = CornMlp(
             # input_size=data_module.data_features.shape[1],
             # num_classes=np.bincount(data_module.data_labels).shape[0],
             # ---

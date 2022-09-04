@@ -10,3 +10,4 @@ mlp-*/
 logs/
 .backups
 dsea-corn
+*.pdf
