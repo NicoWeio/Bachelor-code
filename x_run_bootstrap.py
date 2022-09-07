@@ -10,8 +10,7 @@ import d_evaluate
 import wandb
 import x_config
 
-# TODO: Raises a warning…
-wandb.init(project="dsea-corn", config=x_config.config, dir=Path('build_large/').absolute())
+wandb.init(project="dsea-corn", config=x_config.config, dir=str(Path('build_large/').absolute()))
 
 
 def get_start_iteration():
