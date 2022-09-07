@@ -127,9 +127,9 @@ class LightningMLP(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         loss, true_labels, predicted_labels = self._shared_step(batch)
-        self.log("train_loss", loss)
+        self.log("train/loss", loss)
         self.train_mae(predicted_labels, true_labels)
-        self.log("train_mae", self.train_mae, on_epoch=True, on_step=False, prog_bar=True) # bottleneck?
+        self.log("train/mae", self.train_mae, on_epoch=True, on_step=False, prog_bar=True) # bottleneck?
         # self.train_chi2(predicted_labels, true_labels)
         # self.log("train_chi2", self.train_chi2, on_epoch=True, on_step=False, prog_bar=True) # bottleneck?
         return loss  # this is passed to the optimzer for training
@@ -166,7 +166,8 @@ class CornClassifier():
             # TODO: We use train_mae, not valid_mae, because don't have validation data here. Is this correct?
             ModelCheckpoint(save_top_k=1, mode="min", monitor="train_mae"),  # save top 1 model
         ]
-        csv_logger = CSVLogger(save_dir="logs/", name="mlp-corn-cement")
+        # NOTE: We don't use the prefix kwarg, because the separator '-' is hard-coded, but we want '/'.
+        # There is still room for improvement, as we have 'trainer/global_step' and 'epoch' instead of 'train/global_step' and 'train/epoch'.
         wandb_logger = WandbLogger()  # init happens somewhere else
 
         self.trainer = pl.Trainer(

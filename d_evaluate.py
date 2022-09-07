@@ -40,7 +40,7 @@ def get_metrics(true_labels, predicted_probas):
         'wd': wasserstein_distance(true_spectrum, pred_spectrum),
     }
 
-def evaluate(true_labels, predicted_probas, save=False):
+def evaluate(true_labels, predicted_probas, save=False, dataset='test') -> dict:
     """
     Evaluation & Plots.
     To be called on the test set.
@@ -56,8 +56,7 @@ def evaluate(true_labels, predicted_probas, save=False):
     # pred_spectrum_class = spectrum_from_labels(predicted_labels)
 
     metrics = get_metrics(true_labels, predicted_probas)
-    DATASET = 'test'
-    metrics = {f'{k}_{DATASET}': v for k, v in metrics.items()}
+    metrics = {f'{dataset}/{k}': v for k, v in metrics.items()}
 
     print(*[f"{k}: {v:.4f}" for k, v in metrics.items()], sep='\n')
     wandb.log(metrics)

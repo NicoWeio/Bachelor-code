@@ -23,7 +23,7 @@ def run(X_train, X_test, y_train, interim_eval_callback):
         alpha: step size
         chi2s: Chi Square distance between iterations
         """
-        wandb.log({'f': f, 'k': k, 'alpha': alpha, 'chi2s_iters': chi2s})
+        wandb.log({'dsea/f': f, 'dsea/k': k, 'dsea/alpha': alpha, 'dsea/chi2s_iters': chi2s})
 
         print("▒"*10)
         print(f"Iteration {k} of {wandb.config.num_dsea_iterations}: alpha = {alpha:.3f}, chi2s_iters = {chi2s:.4f}")
