@@ -2,12 +2,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from sklearn.metrics import accuracy_score, confusion_matrix, jaccard_score
 from scipy.stats import wasserstein_distance
+from sklearn.metrics import (accuracy_score, confusion_matrix, jaccard_score,
+                             mean_absolute_error, mean_squared_error)
+
+from cherenkovdeconvolution.util import chi2s
 from da_evaluate_plots import *
 from da_evaluate_plots import plot_spectrum
 from x_config import config  # TODO!
-from cherenkovdeconvolution.util import chi2s
 
 NUM_BINS = config['num_bins']
 BINS = np.arange(NUM_BINS)
@@ -27,6 +29,7 @@ def spectrum_from_probas(probas, norm=True):
         spectrum /= len(probas)
     return spectrum
 
+
 def get_metrics(true_labels, predicted_probas):
     true_spectrum = spectrum_from_labels(true_labels)
     pred_spectrum = spectrum_from_probas(predicted_probas)
@@ -38,7 +41,10 @@ def get_metrics(true_labels, predicted_probas):
         # TODO: Which average mode to choose?
         'jaccard': jaccard_score(true_labels, np.argmax(predicted_probas, axis=1), average='micro'),
         'wd': wasserstein_distance(true_spectrum, pred_spectrum),
+        # TODO 'mae': mean_absolute_error(true_spectrum, pred_spectrum),
+        'rmse': mean_squared_error(true_spectrum, pred_spectrum, squared=False),
     }
+
 
 def evaluate(true_labels, predicted_probas, save=False, dataset='test') -> dict:
     """
@@ -61,9 +67,12 @@ def evaluate(true_labels, predicted_probas, save=False, dataset='test') -> dict:
     print(*[f"{k}: {v:.4f}" for k, v in metrics.items()], sep='\n')
     wandb.log(metrics)
 
-    # ███ Plots
-    plot_spectrum(true_spectrum, pred_spectrum, BINS, save=save)
-    plot_single_events(true_labels, predicted_probas, BINS, save=save)
+    # █ Plots
+    if save:
+        plot_spectrum(true_spectrum, pred_spectrum, BINS, save=save)
+        plot_single_events(true_labels, predicted_probas, BINS, save=save)
+
+    return metrics
 
 
 def save_bootstrap(y_test, y_test_pred, index):
@@ -71,13 +80,17 @@ def save_bootstrap(y_test, y_test_pred, index):
     np.savez(f'build_large/bootstrap/{index}', y_test=y_test, y_test_pred=y_test_pred)
 
 
-def load_bootstrap_bundle():
+def load_bootstrap_bundle(subdir=''):
     """
-    Load a bundle of bootstraps for later analysis, using np.load
+    Load a bundle of bootstraps for analysis, using np.load
+
+    Returns
+    -------
+    bs_bundle : list of (y_test, y_test_pred) tuples
     """
     bs_bundle = []
     from pathlib import Path
-    for bs_file in Path('build_large/bootstrap').glob('*.npz'):
+    for bs_file in Path(f"build_large/bootstrap/{subdir}").glob('*.npz'):
         bs_data = np.load(bs_file)
         y_test = bs_data['y_test']
         y_test_pred = bs_data['y_test_pred']
@@ -107,10 +120,8 @@ def evaluate_bootstrap(bs_bundle):
 
     # █ Energy distribution
 
-
     # ███ Plots
     # import uncertainties.unumpy as unp
-
 
 
 if __name__ == '__main__':
