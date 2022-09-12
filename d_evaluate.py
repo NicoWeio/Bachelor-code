@@ -87,16 +87,21 @@ def load_bootstrap_bundle():
 
 
 def evaluate_bootstrap(bs_bundle):
-    per_bin_differences = []
+    true_spectra = []
+    pred_spectra = []
     for true_labels, predicted_probas in bs_bundle:
-        true_spectrum = spectrum_from_labels(true_labels)
-        pred_spectrum = spectrum_from_probas(predicted_probas)
-        per_bin_difference = true_spectrum - pred_spectrum  # TODO: abs()?
-        per_bin_differences.append(per_bin_difference)
+        true_spectra.append(spectrum_from_labels(true_labels))
+        pred_spectra.append(spectrum_from_probas(predicted_probas))
+    true_spectra = np.array(true_spectra)
+    pred_spectra = np.array(pred_spectra)
 
-    per_bin_differences = np.array(per_bin_differences)
+    wandb.summary['bootstrap/true_spectra'] = true_spectra
+    wandb.summary['bootstrap/pred_spectra'] = pred_spectra
+
+    per_bin_differences = true_spectra - pred_spectra  # TODO: abs()?
     mean_per_bin_difference = np.mean(per_bin_differences, axis=0)
     std_per_bin_difference = np.std(per_bin_differences, axis=0)
+
     with np.printoptions(precision=3):
         print(f"FOOOOO {mean_per_bin_difference} ± {std_per_bin_difference}")
 
