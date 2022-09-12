@@ -7,6 +7,47 @@ import ba_data_stats
 import wandb
 
 
+def get_bin_edges(df, limits, num_bins_between_limits, overflow=True):
+    """
+    Returns the log-scaled bin edges (including both leftmost and rightmost) based on a given DataFrame.
+    Under-/overflow bins are added if they don't conflict with the limits.
+    """
+    lower_limit, upper_limit = limits
+
+    # TODO: use geomspace instead of logspace
+    # log_bin_edges = np.logspace(np.log10(lower_limit), np.log10(upper_limit), num_bins_between_limits+1)
+    log_bin_edges = np.geomspace(lower_limit, upper_limit, num_bins_between_limits+1)
+
+    if not overflow:
+        return log_bin_edges
+
+    the_min = min(df['MCPrimary.energy'])
+    the_max = max(df['MCPrimary.energy'])
+
+    if the_min >= lower_limit:
+        print(
+            f"Warning: The minimum energy in the dataset is {the_min:.2e} GeV, which is larger than (or equal to) the lower limit {lower_limit:.2e} GeV.")
+        print("No underflow bin will be created.")
+    if the_max <= upper_limit:
+        print(
+            f"Warning: The maximum energy in the dataset is {the_max:.2e} GeV, which is smaller than (or equal to) the upper limit {upper_limit:.2e} GeV.")
+        print("No overflow bin will be created.")
+
+    # This represents bin edges, including the leftmost and rightmost ones.
+    bin_edges = np.concatenate([
+        # [1],  # [0] might cause problems with the log scale
+        [the_min] if the_min < lower_limit else [],
+        log_bin_edges,
+        [the_max] if the_max > upper_limit else [],
+        # [np.infty],
+    ])
+
+    # FIXME: Underflow bin may or may not exist depending on the custom limits.
+    # assert len(bin_edges) == NUM_BINS + 1, f"Expected {NUM_BINS+1} bin edges, got {len(bin_edges)}."
+
+    return bin_edges
+
+
 def get_data(dummy=True, nrows=None):
     """
     Returns (X, y) ready for training.
@@ -15,27 +56,32 @@ def get_data(dummy=True, nrows=None):
     """
     df = pd.read_csv('build_large/data.csv', nrows=nrows)
 
-    # discretize the target neutrino energy
+    # █ Discretize the target neutrino energy
+    # ↓ variant with under-/overflow bins
+    # bin_edges = get_bin_edges(df, (LOWER_LIMIT, UPPER_LIMIT), (wandb.config.num_bins-1))
+    bin_edges = get_bin_edges(df, wandb.config.underflow_overflow_limits, num_bins_between_limits=(wandb.config.num_bins-2))
+    # Ensure that we always have num_bins total bins, including under-/overflow bins.
+    # We need to change num_bins_between_limits if the under-/overflow bins are omitted.
+    assert len(bin_edges) == wandb.config.num_bins + 1
+    wandb.summary['bin_edges'] = bin_edges
 
-    # throw out extreme high and low energy neutrinos
-    # TODO: Use under-/overflow bins instead
-    lower_limit = 100
-    upper_limit = 10**5
-    df = df[(df['MCPrimary.energy'] > lower_limit) & (df['MCPrimary.energy'] < upper_limit)]
-
-    # log-scaled Binning
-    bins = np.logspace(np.log10(lower_limit), np.log10(upper_limit), wandb.config.num_bins+1)
+    # ↓ variant without under-/overflow bins
+    # bin_edges = get_bin_edges(df,
+    #                           (int(min(df['MCPrimary.energy']) - 1), int(max(df['MCPrimary.energy']) + 1)),
+    #                           wandb.config.num_bins,
+    #                           overflow=False,
+    #                           )
 
     # new column with discretized energies
-    df['E_discr'] = pd.cut(df['MCPrimary.energy'], bins=bins, labels=range(len(bins)-1))
+    df['E_discr'] = pd.cut(df['MCPrimary.energy'], bins=bin_edges, labels=range(len(bin_edges)-1), include_lowest=True)
 
     X = df.drop(columns=['MCPrimary.energy', 'E_discr'])
 
-    # Standardize features
+    # █ Standardize features
     # NOTE: Implicit conversion of X to a NumPy array
     # X = StandardScaler().fit_transform(X)
 
-    # Power transform features
+    # █ Power transform features
     X = PowerTransformer(method='yeo-johnson', standardize=True).fit_transform(X)
 
     if dummy:

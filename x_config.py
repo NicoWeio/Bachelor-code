@@ -7,7 +7,7 @@ config = {
     'stratify_test': False,
     'stratify_train': False,
     'num_bins': 10,
-    'test_size': 0.2,  # Jan used 0.1
+    'underflow_overflow_limits': (10**2.1, 10**5),
 
     # █ CORN
     'batch_size': 2**11,  # ✅
