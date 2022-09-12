@@ -25,9 +25,11 @@ config = {
     # ██ TreeDiscretizer
     'J_factor': 10,
 
-    # █ Bootstrap
+    # █ Bootstrap / cross validation
     'num_bootstrap_iterations': 50,
     # 'num_bootstrap_samples': 500_000,
+    #
+    'crossval_n_splits': 10,
 }
 
 
