@@ -20,7 +20,8 @@ def get_start_iteration():
         bs_files = data_dir.glob('*.npz')
         iter_nums = [int(f.stem) for f in bs_files]
         # We don't want to repeat the last iteration, so we add 1.
-        return max(iter_nums or [0]) + 1
+        # If there are no files, we start at 0 = (-1) + 1.
+        return max(iter_nums or [-1]) + 1
     except Exception as e:
         print(e)
         raise e
@@ -33,22 +34,21 @@ def run():
         print(f"Resuming with iteration {START_ITER}")
 
     print("Loading data…")
-    # X_train, X_test, y_train, y_test = b_prepare_data.get_train_test_data()
-    X, y = b_prepare_data.get_data(dummy=False,
-                                   # to_numpy=True,
-                                   #    nrows=wandb.config.nrows,
-                                   # Since we train on a bootstrapped sample, let's load some more.
-                                   # This should lead to less occasions of multiple draws, therefore providing a more diverse training set.
-                                   nrows=max(1_000_000, wandb.config.nrows),
-                                   #    nrows=None,
-                                   )
+    X, y = b_prepare_data.get_data(
+        dummy=False,
+        # nrows=None,
+        # nrows=wandb.config.nrows,
+        # Since we train on a bootstrapped sample, let's load some more.
+        # This should lead to less occasions of multiple draws, therefore providing a more diverse training set.
+        nrows=max(1_000_000, wandb.config.nrows),
+    )
 
     bs_results = []
 
     BS_ITERS = wandb.config.num_bootstrap_iterations
 
     for bs_iter in range(START_ITER, START_ITER + BS_ITERS):
-        print(f"██████████ Bootstrap iteration {bs_iter}/{BS_ITERS}")
+        print(f"██████████ Bootstrap iteration {bs_iter+1}/{BS_ITERS}")
 
         X_train, X_test, y_train, y_test = b_prepare_data.get_bootstrap(
             X, y,
@@ -57,7 +57,7 @@ def run():
         )
 
         def interim_eval_cb(y_test_pred):
-            # d_evaluate.evaluate(y_test, y_test_pred)
+            d_evaluate.evaluate(y_test, y_test_pred)
             return
 
         print("Training model…")
@@ -68,10 +68,14 @@ def run():
 
         bs_results.append((y_test, y_test_pred))
 
-        d_evaluate.save_bootstrap(y_test, y_test_pred, index=(START_ITER + bs_iter)) # TODO: One +1 too much
-
+        d_evaluate.save_bootstrap(y_test, y_test_pred, index=(START_ITER + bs_iter))  # TODO: One +1 too much
 
     d_evaluate.evaluate_bootstrap(bs_results)
+
+    wandb.alert(
+        title="Bootstrap finished",
+        text=f"Finished {BS_ITERS} BS iterations.",
+    )
 
 
 if __name__ == '__main__':

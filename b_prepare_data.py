@@ -96,3 +96,28 @@ def get_train_test_data():
     print(ba_data_stats.stats(X_train, X_test, y_train, y_test))
 
     return X_train, X_test, y_train, y_test
+
+
+def get_bootstrap(X, y, n_samples, random_state=42):
+    from numpy.random import default_rng
+    rng = default_rng(seed=random_state)
+
+    # get a np array of random indices with replacement
+    # (i.e. each index is drawn with equal probability)
+    # indices_bs = np.random.randint(0, len(X), size=n_samples, random_state=random_state)
+    indices_bs = rng.integers(0, len(X), size=n_samples)
+    # indices_bs = np.random.choice(len(X), size=n_samples, replace=True, random_state=random_state)
+
+    indices_not_bs = np.array(list(set(range(len(X))) - set(indices_bs)))
+
+    # train / bootstrapped data
+    X_train = X[indices_bs].copy()
+    y_train = y[indices_bs].copy()
+
+    # test / out-of-bag data
+    X_test = X[indices_not_bs].copy()
+    y_test = y[indices_not_bs].copy()
+
+    print(ba_data_stats.stats(X_train, X_test, y_train, y_test))
+
+    return X_train, X_test, y_train, y_test
