@@ -46,4 +46,4 @@
 
 ## Literature
 - https://raschka-research-group.github.io/coral-pytorch/tutorials/pytorch_lightning/ordinal-corn_cement
-- [https://mail.sebastianraschka.com/pdf/slides/2022-02_rework-coral-lightning.pdf](Easy-to-understand slides explaining CORN/CORAL)
+- [Easy-to-understand slides explaining CORN/CORAL](https://mail.sebastianraschka.com/pdf/slides/2022-02_rework-coral-lightning.pdf)

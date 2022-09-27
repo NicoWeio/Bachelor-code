@@ -101,29 +101,24 @@ def load_bootstrap_bundle(subdir=''):
     return bs_bundle
 
 
-def evaluate_bootstrap(bs_bundle):
+def evaluate_multi(multi_bundle):
     true_spectra = []
     pred_spectra = []
-    for true_labels, predicted_probas in bs_bundle:
+    for true_labels, predicted_probas in multi_bundle:
         true_spectra.append(spectrum_from_labels(true_labels))
         pred_spectra.append(spectrum_from_probas(predicted_probas))
     true_spectra = np.array(true_spectra)
     pred_spectra = np.array(pred_spectra)
 
-    wandb.summary['bootstrap/true_spectra'] = true_spectra.tolist()
-    wandb.summary['bootstrap/pred_spectra'] = pred_spectra.tolist()
+    wandb.summary['multi/true_spectra'] = true_spectra.tolist()
+    wandb.summary['multi/pred_spectra'] = pred_spectra.tolist()
 
     per_bin_differences = true_spectra - pred_spectra  # TODO: abs()?
     mean_per_bin_difference = np.mean(per_bin_differences, axis=0)
     std_per_bin_difference = np.std(per_bin_differences, axis=0)
 
     with np.printoptions(precision=3):
-        print(f"FOOOOO {mean_per_bin_difference} ± {std_per_bin_difference}")
-
-    # █ Energy distribution
-
-    # ███ Plots
-    # import uncertainties.unumpy as unp
+        print(f"Differences: {mean_per_bin_difference} ± {std_per_bin_difference}")
 
 
 if __name__ == '__main__':

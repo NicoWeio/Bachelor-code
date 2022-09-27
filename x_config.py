@@ -27,18 +27,14 @@ config_all = {
 
 config_hyperparameters = {
     'batch_size': 4096,  # TODO: maybe 2048 is not actually worse
-    'epsilon': 0.01,  # TODO: might have to go back to 1e-10
+    'epsilon': 0.01,
     'J': 100, # for the TreeDiscretizer
     'learning_rate': 0.0009,  # ✓
     'num_epochs': 12,  # ✓
 }
 
 config_bootstrap = {
-    # 'epsilon': 1e-3,  # ⚠️
-    # 'nrows': 2_000_000,  # ⚠️
-    # 'num_bootstrap_iterations': 50,
-    # 'num_bootstrap_samples': 500_000,
-    'multi_mode': 'crossval',
+    'multi_mode': 'bootstrap',
     'multi_count': 50,  # ≙ num_bootstrap_iterations
 }
 
@@ -55,8 +51,6 @@ config_bias = {
 config_quicktest = {
     'num_epochs': 2,
     'num_dsea_iterations': 2,
-    # 'num_bootstrap_iterations': 2,
-    # 'crossval_n_splits': 2,
     'multi_count': 2,
 }
 
@@ -64,7 +58,7 @@ config = config_all | config_hyperparameters | config_bootstrap
 # config = config_all | config_hyperparameters | config_crossval
 
 # uncomment this for quick tests ↓
-config |= config_quicktest
+# config |= config_quicktest
 
 
 def run_id(config):

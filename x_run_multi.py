@@ -64,6 +64,7 @@ def run():
     def interim_eval_cb(y_test_pred):
         d_evaluate.evaluate(y_test, y_test_pred)
 
+    multi_bundle = []
     metrics_list = []
     J = wandb.config.multi_count
 
@@ -83,6 +84,8 @@ def run():
         metrics = d_evaluate.evaluate(y_test, y_test_pred, save=False)
         metrics_list.append(metrics)
         update_wandb_summary(metrics_list)
+        multi_bundle.append((y_test, y_test_pred))
+        d_evaluate.evaluate_multi(multi_bundle)
 
         wandb.log({'multi_progress': (j+1) / J})
 
