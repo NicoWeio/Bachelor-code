@@ -46,7 +46,7 @@ def get_metrics(true_labels, predicted_probas):
     }
 
 
-def evaluate(true_labels, predicted_probas, save=False, dataset='test') -> dict:
+def evaluate(true_labels, predicted_probas, save=False, log=True, dataset='test') -> dict:
     """
     Evaluation & Plots.
     To be called on the test set.
@@ -54,7 +54,8 @@ def evaluate(true_labels, predicted_probas, save=False, dataset='test') -> dict:
     # █ Verification
     # → Every bin is represented in the (true) `labels`
     assert np.all(np.isin(BINS, true_labels)), "Not all bins are represented in the labels!"
-    print("Verification passed.")
+    if log:
+        print("Verification passed.")
 
     # █ Energy distribution
     true_spectrum = spectrum_from_labels(true_labels)
@@ -64,8 +65,9 @@ def evaluate(true_labels, predicted_probas, save=False, dataset='test') -> dict:
     metrics = get_metrics(true_labels, predicted_probas)
     metrics = {f'{dataset}/{k}': v for k, v in metrics.items()}
 
-    print(*[f"{k}: {v:.4f}" for k, v in metrics.items()], sep='\n')
-    wandb.log(metrics)
+    if log:
+        print(*[f"{k}: {v:.4f}" for k, v in metrics.items()], sep='\n')
+        wandb.log(metrics)
 
     # █ Plots
     if save:
@@ -108,8 +110,8 @@ def evaluate_bootstrap(bs_bundle):
     true_spectra = np.array(true_spectra)
     pred_spectra = np.array(pred_spectra)
 
-    wandb.summary['bootstrap/true_spectra'] = true_spectra
-    wandb.summary['bootstrap/pred_spectra'] = pred_spectra
+    wandb.summary['bootstrap/true_spectra'] = true_spectra.tolist()
+    wandb.summary['bootstrap/pred_spectra'] = pred_spectra.tolist()
 
     per_bin_differences = true_spectra - pred_spectra  # TODO: abs()?
     mean_per_bin_difference = np.mean(per_bin_differences, axis=0)
