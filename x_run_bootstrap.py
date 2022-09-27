@@ -40,6 +40,7 @@ def run():
         # nrows=wandb.config.nrows,
         # Since we train on a bootstrapped sample, let's load some more.
         # This should lead to less occasions of multiple draws, therefore providing a more diverse training set.
+        # TODO: Make this a config option.
         nrows=max(1_000_000, wandb.config.nrows),
     )
 

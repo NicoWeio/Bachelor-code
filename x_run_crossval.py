@@ -32,6 +32,9 @@ def run():
     n_splits = wandb.config.crossval_n_splits
     kf = KFold(n_splits=n_splits)
     # NOTE: The test size is determined by the number of splits.
+    if (wandb.config.nrows / n_splits) != wandb.config.test_size:
+        print(f"WARNING: The number of splits ({n_splits}) "
+              f"does not result in the desired test size ({wandb.config.test_size}).")
 
     def interim_eval_cb(y_test_pred):
         d_evaluate.evaluate(y_test, y_test_pred)
@@ -41,7 +44,6 @@ def run():
     for k, (train_idx, test_idx) in enumerate(kf.split(X)):
         print(f"██████████ Cross-validation iteration {k+1}/{n_splits}")
         # wandb.log({'crossval_iteration': k})
-        wandb.log({'crossval_progress': k / n_splits})
         X_train, X_test = X[train_idx], X[test_idx]
         y_train, y_test = y[train_idx], y[test_idx]
 
@@ -51,6 +53,8 @@ def run():
         print(f"Evaluating model {k+1}/{n_splits}…")
         metrics = d_evaluate.evaluate(y_test, y_test_pred, save=False)
         metrics_list.append(metrics)
+
+        wandb.log({'crossval_progress': (k+1) / n_splits})
 
     # convert [{k: v}, {k: v}] to {k: [v, v]}
     metrics_dict_all = {k: [d[k] for d in metrics_list] for k in metrics_list[0]}
