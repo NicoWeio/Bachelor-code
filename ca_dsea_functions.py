@@ -7,8 +7,9 @@ def get_adaptive_alpha(X_train, X_test, y_train):
     discretizer = TreeDiscretizer(
         X_train, y_train,
         # Interpret the J leaves of a decision tree as clusters.
+        J=wandb.config.J,
         # This value is proportional to the number of bins, based on a recommendation by Mirko Bunse.
-        J=wandb.config.J_factor * wandb.config.num_bins,
+        # J=wandb.config.J_factor * wandb.config.num_bins,
         seed=42,
     )
     X_data_discrete = discretizer.discretize(X_test)

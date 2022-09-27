@@ -159,10 +159,15 @@ def get_bootstrap(X, y, n_samples, random_state=42):
     # train / bootstrapped data
     X_train = X[indices_bs].copy()
     y_train = y[indices_bs].copy()
+    if wandb.config.stratify_train:
+        raise NotImplementedError("Stratification of bootstrap training data is not implemented.")
 
     # test / out-of-bag data
     X_test = X[indices_not_bs].copy()
     y_test = y[indices_not_bs].copy()
+    if wandb.config.stratify_test:
+        # raise NotImplementedError("Stratification of bootstrap test data is not implemented.")
+        X_test, y_test = stratify_data(X_test, y_test)
 
     print(ba_data_stats.stats(X_train, X_test, y_train, y_test))
 
