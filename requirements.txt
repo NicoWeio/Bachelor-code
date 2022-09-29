@@ -1,0 +1,9 @@
+# cherenkovdeconvolution
+rich
+coral-pytorch
+matplotlib
+pandas
+pytorch-lightning
+scikit-learn
+seaborn
+wandb

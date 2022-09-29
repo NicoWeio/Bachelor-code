@@ -1,6 +1,8 @@
 import time
 
 config_all = {
+    # These are the configuration options that are common to all runs and not part of hyperparameter searches.
+    #
     # █ data
     # 'nrows': None, # = all rows
     'nrows': 500_000,  # ✅ (Samuel)
@@ -11,26 +13,22 @@ config_all = {
     'underflow_overflow_limits': (10**2.1, 10**5),
 
     # █ CORN
-    'batch_size': 2**11,  # ✅
-    'learning_rate': 0.0009,
-    'num_epochs': 5,
     'hidden_units': (120, 240, 120, 12),
-    'num_workers': 48,  # no speedup compared to 0
+    'num_workers': 48,  # CPU-dependent; no speedup compared to 0
 
     # █ DSEA
     'num_dsea_iterations': 20,  # NOTE: This is only an upper limit; rather tune the epsilon parameter below
     'fixweighting': 'always',  # ✅
     'alpha': 0.5,  # ignored when using adaptive step size
-    'epsilon': 1e-5,  # TODO
     # 'use_dsea': False, # TODO: respect this
 }
 
 config_hyperparameters = {
     'batch_size': 4096,  # TODO: maybe 2048 is not actually worse
     'epsilon': 0.01,
-    'J': 100, # for the TreeDiscretizer
-    'learning_rate': 0.0009,  # ✓
-    'num_epochs': 12,  # ✓
+    'J': 250,  # for the TreeDiscretizer
+    'learning_rate': 0.0004,  # ⚠️
+    'num_epochs': 12,  # ✅
 }
 
 config_bootstrap = {
